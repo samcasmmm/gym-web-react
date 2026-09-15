@@ -2,22 +2,118 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#FF2625" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Primary SEO Meta Tags -->
+    <title>Gold's Gym — Ultimate Fitness, Workout Tracker & 15-in-1 Precision Health Suite</title>
+    <meta
+      name="title"
+      content="Gold's Gym — Ultimate Fitness, Workout Tracker & 15-in-1 Precision Health Suite"
+    />
     <meta
       name="description"
-      content="Fitness Exercises and Workout Application"
+      content="Train like an elite athlete with Gold's Gym Web App. Explore 1,300+ target muscle exercises, log live workout sets, design custom workout plans, and utilize our clinical 15-in-1 health suite (TDEE, BMI dial, Protein/Leucine MPS, Fasting clock, 1RM, Body Fat & Race Pace)."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="apple-touch-icon" href="/logo192.png" />
+    <meta
+      name="keywords"
+      content="Golds Gym, fitness app, workout tracker, exercise library, gym workout planner, bodybuilding, strength training, TDEE calculator, BMI calculator, protein leucine optimizer, intermittent fasting clock, 1RM strength calculator, US Navy body fat, running pace calculator, workout log, IndexedDB offline fitness"
+    />
+    <meta name="author" content="Gold's Gym Digital" />
+    <meta name="robots" content="index, follow" />
+    <meta name="application-name" content="Gold's Gym App" />
+
+    <!-- Theme & Mobile App Capabilities -->
+    <meta name="theme-color" content="#FF2625" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Gold's Gym" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://goldgym.netlify.app" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://goldgym.netlify.app/" />
+    <meta property="og:site_name" content="Gold's Gym Pro Fitness Suite" />
+    <meta
+      property="og:title"
+      content="Gold's Gym — Ultimate Fitness, Workout Tracker & 15-in-1 Precision Health Suite"
+    />
+    <meta
+      property="og:description"
+      content="Comprehensive workout planning, 1,300+ exercise video guides, live workout logbook, custom program builder, and clinical fitness calculators."
+    />
+    <meta property="og:image" content="https://goldgym.netlify.app/og-preview.png" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://goldgym.netlify.app/" />
+    <meta
+      name="twitter:title"
+      content="Gold's Gym — Ultimate Fitness, Workout Tracker & 15-in-1 Precision Health Suite"
+    />
+    <meta
+      name="twitter:description"
+      content="Train smarter with 1,300+ animated exercises, live set logging, personalized routine builder, and 15 precision fitness calculators."
+    />
+    <meta name="twitter:image" content="https://goldgym.netlify.app/og-preview.png" />
+
+    <!-- Icons & Manifest -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Golds Gym - Fitness App</title>
+
+    <!-- Fonts & Preconnects -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Structured Data (JSON-LD) for SEO & Rich Snippets -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Gold's Gym Web Application",
+        "url": "https://goldgym.netlify.app",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "All (Web, iOS, Android, Desktop)",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Gold's Gym Web Application delivers 1,300+ exercise video tutorials, live workout tracking with PR detection, custom workout routine builder, and 15 clinical health calculators.",
+        "creator": {
+          "@type": "Organization",
+          "name": "Gold's Gym Digital",
+          "url": "https://goldgym.netlify.app"
+        },
+        "featureList": [
+          "1,300+ Exercise Directory with muscle group targeting and GIF demonstrations",
+          "Live Workout Tracker with rest timers, RPE ratings, and personal record recognition",
+          "Custom Routine Builder and weekly workout split scheduler",
+          "Offline-first local IndexedDB database storage",
+          "15-in-1 Precision Health Calculators (BMI Dial, TDEE & Macro Split, Protein & Leucine Optimizer, Intermittent Fasting Clock, Carb Cycling, Weight Goal Timeline, US Navy Body Fat %, BMR Engine, Ideal Weight Array, 1RM Strength Matrix, Daily Hydration, Running Pace Predictor, Pregnancy Gestational Tracker, Conception Window, and EDD Due Date)"
+        ]
+      }
+    </script>
   </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+  <body class="bg-gray-50 text-gray-900 antialiased selection:bg-[#FF2625] selection:text-white">
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: sans-serif;">
+        <h2>JavaScript Required</h2>
+        <p>You need to enable JavaScript to experience the full Gold's Gym Web Application.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
