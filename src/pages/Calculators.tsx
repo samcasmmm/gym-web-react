@@ -1034,68 +1034,72 @@ const Calculators: React.FC = () => {
 
                 {/* SVG Gauge Graphic */}
                 <div className='relative flex flex-col items-center justify-center pt-2'>
-                  <svg className='w-56 h-32 overflow-visible' viewBox='0 0 200 110'>
-                    {/* Background Arc */}
+                  <svg className='w-64 h-36 overflow-visible' viewBox='0 0 240 135'>
+                    <defs>
+                      <linearGradient id='gaugeTrackGrad' x1='0%' y1='0%' x2='100%' y2='0%'>
+                        <stop offset='0%' stopColor='#0ea5e9' />
+                        <stop offset='25%' stopColor='#10b981' />
+                        <stop offset='60%' stopColor='#f59e0b' />
+                        <stop offset='100%' stopColor='#ef4444' />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Background Track */}
                     <path
-                      d='M 20 100 A 80 80 0 0 1 180 100'
+                      d='M 35 115 A 85 85 0 0 1 205 115'
                       fill='none'
-                      stroke='#374151'
-                      strokeWidth='16'
+                      stroke='#1f2937'
+                      strokeWidth='14'
                       strokeLinecap='round'
                     />
-                    {/* Colored Category Zones */}
+
+                    {/* Gradient Colored Arc */}
                     <path
-                      d='M 20 100 A 80 80 0 0 1 60 40'
+                      d='M 35 115 A 85 85 0 0 1 205 115'
                       fill='none'
-                      stroke='#0ea5e9'
-                      strokeWidth='16'
-                      strokeLinecap='round'
-                      opacity='0.8'
-                    />
-                    <path
-                      d='M 60 40 A 80 80 0 0 1 120 25'
-                      fill='none'
-                      stroke='#10b981'
-                      strokeWidth='16'
+                      stroke='url(#gaugeTrackGrad)'
+                      strokeWidth='14'
                       strokeLinecap='round'
                       opacity='0.9'
                     />
-                    <path
-                      d='M 120 25 A 80 80 0 0 1 160 55'
-                      fill='none'
-                      stroke='#f59e0b'
-                      strokeWidth='16'
-                      strokeLinecap='round'
-                      opacity='0.85'
-                    />
-                    <path
-                      d='M 160 55 A 80 80 0 0 1 180 100'
-                      fill='none'
-                      stroke='#ef4444'
-                      strokeWidth='16'
-                      strokeLinecap='round'
-                      opacity='0.85'
-                    />
+
+                    {/* Tick Markers */}
+                    {/* 18.5 Marker */}
+                    <circle cx='43' cy='79' r='2' fill='#ffffff' opacity='0.7' />
+                    {/* 25.0 Marker */}
+                    <circle cx='94' cy='34' r='2' fill='#ffffff' opacity='0.7' />
+                    {/* 30.0 Marker */}
+                    <circle cx='146' cy='34' r='2' fill='#ffffff' opacity='0.7' />
 
                     {/* Animated Needle */}
                     {(() => {
-                      const angle = -180 + (bmiResult.pct / 100) * 180;
-                      const rad = (angle * Math.PI) / 180;
-                      const x2 = 100 + 65 * Math.cos(rad);
-                      const y2 = 100 + 65 * Math.sin(rad);
+                      const pct = Math.max(0, Math.min(100, ((bmiResult.bmi - 15) / 25) * 100));
+                      const rad = (pct / 100) * Math.PI;
+                      const x2 = 120 - 66 * Math.cos(rad);
+                      const y2 = 115 - 66 * Math.sin(rad);
                       return (
-                        <>
-                          <line x1='100' y1='100' x2={x2} y2={y2} stroke='#ffffff' strokeWidth='3.5' strokeLinecap='round' />
-                          <circle cx='100' cy='100' r='6' fill='#FF2625' stroke='#ffffff' strokeWidth='2' />
-                        </>
+                        <g>
+                          <line
+                            x1='120'
+                            y1='115'
+                            x2={x2}
+                            y2={y2}
+                            stroke='#ffffff'
+                            strokeWidth='3.5'
+                            strokeLinecap='round'
+                          />
+                          <circle cx='120' cy='115' r='6' fill='#FF2625' stroke='#111827' strokeWidth='2.5' />
+                        </g>
                       );
                     })()}
                   </svg>
 
-                  {/* Centered Readout Value */}
-                  <div className='text-center mt-[-20px]'>
+                  {/* Centered Readout Value with Clean Spacing (No Overlap) */}
+                  <div className='text-center mt-2'>
                     <span className='text-4xl font-black font-mono tracking-tight text-white'>{bmiResult.bmi}</span>
-                    <span className='block text-[11px] font-bold text-gray-400 uppercase tracking-widest'>kg / m²</span>
+                    <span className='block text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5'>
+                      kg / m²
+                    </span>
                   </div>
                 </div>
 
@@ -1115,13 +1119,90 @@ const Calculators: React.FC = () => {
                   </div>
                 </div>
 
-                {bmiResult.deltaKg !== 0 && (
-                  <div className='p-2.5 rounded-md bg-white/5 border border-white/10 text-xs text-gray-300 flex items-center justify-between'>
-                    <span>Delta to Normal Range:</span>
-                    <strong className='text-amber-400 font-mono font-bold'>
-                      {bmiResult.category === 'Underweight' ? `+${bmiResult.deltaKg}` : `-${bmiResult.deltaKg}`}{' '}
-                      {unitSystem === 'metric' ? 'kg' : 'lbs'}
-                    </strong>
+                {/* Intuitive Target Weight & Delta Goal Card */}
+                {bmiResult.category === 'Normal Weight' ? (
+                  <div className='p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs flex items-center justify-between gap-3'>
+                    <div className='flex items-center gap-2.5'>
+                      <div className='w-7 h-7 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0'>
+                        <CheckCircle2 className='w-4 h-4' />
+                      </div>
+                      <div>
+                        <span className='font-bold text-emerald-300 block'>In Optimal Healthy Weight Zone</span>
+                        <span className='text-[11px] text-gray-400'>
+                          Your weight is within the healthy boundary ({bmiResult.minHealthyKg} – {bmiResult.maxHealthyKg}{' '}
+                          {unitSystem === 'metric' ? 'kg' : 'lbs'})
+                        </span>
+                      </div>
+                    </div>
+                    <span className='px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs shrink-0'>
+                      ✓ Optimal
+                    </span>
+                  </div>
+                ) : bmiResult.category === 'Underweight' ? (
+                  <div className='p-3.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-xs space-y-2'>
+                    <div className='flex items-center justify-between gap-2'>
+                      <div className='flex items-center gap-2.5'>
+                        <div className='w-7 h-7 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 text-xs font-bold'>
+                          📈
+                        </div>
+                        <div>
+                          <span className='font-bold text-sky-300 block'>Healthy Surplus Goal</span>
+                          <span className='text-[11px] text-gray-300'>
+                            Gain <strong className='text-white font-bold'>+{bmiResult.deltaKg} {unitSystem === 'metric' ? 'kg' : 'lbs'}</strong> to reach Normal BMI (&ge; {bmiResult.minHealthyKg} {unitSystem === 'metric' ? 'kg' : 'lbs'})
+                          </span>
+                        </div>
+                      </div>
+                      <div className='text-right shrink-0'>
+                        <span className='text-base font-black font-mono text-sky-400'>+{bmiResult.deltaKg}</span>
+                        <span className='text-[10px] text-gray-400 block uppercase font-bold'>{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                      </div>
+                    </div>
+                    <div className='pt-1.5 flex items-center justify-between gap-2 text-[11px] text-gray-400 border-t border-white/10'>
+                      <span>Suggested Strategy:</span>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setActiveTab('calorie');
+                          setTargetGoal('bulk300');
+                        }}
+                        className='text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1 cursor-pointer transition-colors'
+                      >
+                        Plan +300 kcal Surplus →
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs space-y-2'>
+                    <div className='flex items-center justify-between gap-2'>
+                      <div className='flex items-center gap-2.5'>
+                        <div className='w-7 h-7 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-xs font-bold'>
+                          📉
+                        </div>
+                        <div>
+                          <span className='font-bold text-amber-300 block'>Target Weight Reduction</span>
+                          <span className='text-[11px] text-gray-300'>
+                            Lose <strong className='text-white font-bold'>{bmiResult.deltaKg} {unitSystem === 'metric' ? 'kg' : 'lbs'}</strong> to enter Normal BMI (&le; {bmiResult.maxHealthyKg} {unitSystem === 'metric' ? 'kg' : 'lbs'})
+                          </span>
+                        </div>
+                      </div>
+                      <div className='text-right shrink-0'>
+                        <span className='text-base font-black font-mono text-amber-400'>-{bmiResult.deltaKg}</span>
+                        <span className='text-[10px] text-gray-400 block uppercase font-bold'>{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                      </div>
+                    </div>
+                    <div className='pt-1.5 flex items-center justify-between gap-2 text-[11px] text-gray-400 border-t border-white/10'>
+                      <span>Suggested Strategy:</span>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setActiveTab('calorie');
+                          setTargetGoal('cut500');
+                        }}
+                        className='text-red-400 hover:text-red-300 font-bold flex items-center gap-1 cursor-pointer transition-colors'
+                      >
+                        Plan -500 kcal Deficit →
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
