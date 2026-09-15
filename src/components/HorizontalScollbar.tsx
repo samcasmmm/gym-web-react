@@ -30,45 +30,81 @@ const HorizontalScrollbar: React.FC<HorizontalScrollbarProps> = ({
     }
   };
 
+  if (isBodyPart) {
+    return (
+      <div className="relative w-full py-1">
+        <div className="flex items-center gap-2">
+          {/* Left Arrow Button */}
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            aria-label="Scroll left"
+            className="w-8 h-8 shrink-0 hidden sm:flex items-center justify-center rounded-md bg-white shadow-xs hover:bg-gray-100 text-gray-700 border border-gray-200 transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Scrollable Pills Container */}
+          <div
+            ref={scrollContainerRef}
+            className="flex flex-row overflow-x-auto gap-2 no-scrollbar scroll-smooth py-1 px-0.5 flex-grow"
+          >
+            {data.map((item, index) => (
+              <div key={item.id || item.exerciseId || item || index} className="shrink-0">
+                <BodyPart
+                  item={typeof item === 'string' ? item : item.name}
+                  bodyPart={bodyPart}
+                  setBodyPart={setBodyPart}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Right Arrow Button */}
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            aria-label="Scroll right"
+            className="w-8 h-8 shrink-0 hidden sm:flex items-center justify-center rounded-md bg-white shadow-xs hover:bg-gray-100 text-gray-700 border border-gray-200 transition-colors cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative w-full group py-4">
-      {/* Scrollable Container */}
+    <div className="relative w-full py-4">
+      {/* Scrollable Cards Container */}
       <div
         ref={scrollContainerRef}
-        className="flex flex-row overflow-x-auto gap-6 no-scrollbar scroll-smooth py-2 px-1"
+        className="flex flex-row overflow-x-auto gap-4 sm:gap-6 no-scrollbar scroll-smooth py-2 px-1"
       >
         {data.map((item, index) => (
           <div key={item.id || item.exerciseId || item || index} className="shrink-0">
-            {isBodyPart ? (
-              <BodyPart
-                item={typeof item === 'string' ? item : item.name}
-                bodyPart={bodyPart}
-                setBodyPart={setBodyPart}
-              />
-            ) : (
-              <ExerciseCard exercise={item as Exercise} />
-            )}
+            <ExerciseCard exercise={item as Exercise} />
           </div>
         ))}
       </div>
 
       {/* Navigation Arrows */}
-      <div className="flex justify-end gap-4 mt-4 pr-4">
+      <div className="flex justify-end gap-3 mt-4 pr-2">
         <button
           type="button"
           onClick={() => scroll('left')}
           aria-label="Scroll left"
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-md hover:shadow-lg hover:bg-[#FF2625] text-[#FF2625] hover:text-white border border-gray-100 transition-all duration-200 cursor-pointer"
+          className="w-9 h-9 flex items-center justify-center rounded-md bg-white shadow-xs hover:bg-[#FF2625] text-gray-700 hover:text-white border border-gray-200 transition-colors cursor-pointer"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={() => scroll('right')}
           aria-label="Scroll right"
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-md hover:shadow-lg hover:bg-[#FF2625] text-[#FF2625] hover:text-white border border-gray-100 transition-all duration-200 cursor-pointer"
+          className="w-9 h-9 flex items-center justify-center rounded-md bg-white shadow-xs hover:bg-[#FF2625] text-gray-700 hover:text-white border border-gray-200 transition-colors cursor-pointer"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>

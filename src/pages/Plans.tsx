@@ -60,7 +60,7 @@ const Plans: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4 space-y-8">
       {/* Header */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-[#FF2625] flex items-center gap-1.5">
             <Calendar className="w-4 h-4" /> Training Programs
@@ -74,7 +74,7 @@ const Plans: React.FC = () => {
         <button
           type="button"
           onClick={() => setCreateModalOpen(true)}
-          className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-3 rounded-2xl font-bold text-sm shadow-sm flex items-center gap-2 transition-all hover:scale-102 cursor-pointer shrink-0"
+          className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2.5 rounded-md font-bold text-sm shadow-xs flex items-center gap-2 transition-colors cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4 text-[#FF2625]" /> Create Routine
         </button>
@@ -85,11 +85,11 @@ const Plans: React.FC = () => {
         {routines.map((routine) => (
           <div
             key={routine.id}
-            className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-xs flex flex-col justify-between hover:shadow-md transition-all space-y-6"
+            className="bg-white rounded-xl p-6 sm:p-8 border border-gray-200/80 shadow-xs flex flex-col justify-between hover:shadow-md transition-all space-y-6"
           >
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-red-50 text-[#FF2625]">
+                <span className="px-2.5 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider bg-red-50 text-[#FF2625]">
                   {routine.category}
                 </span>
                 <span className="text-xs text-gray-400 font-semibold">
@@ -108,7 +108,7 @@ const Plans: React.FC = () => {
                   {routine.exerciseNames.map((name, i) => (
                     <span
                       key={i}
-                      className="px-3 py-1 rounded-xl bg-gray-50 text-gray-700 text-xs font-semibold capitalize border border-gray-100 flex items-center gap-1.5"
+                      className="px-2.5 py-1 rounded-md bg-gray-50 text-gray-700 text-xs font-semibold capitalize border border-gray-100 flex items-center gap-1.5"
                     >
                       <Dumbbell className="w-3 h-3 text-[#FF2625]" />
                       {name}
@@ -121,7 +121,7 @@ const Plans: React.FC = () => {
             <button
               type="button"
               onClick={() => handleStart(routine)}
-              className="w-full bg-[#FF2625] hover:bg-[#e0201f] text-white py-3.5 rounded-2xl font-bold text-sm shadow-md shadow-red-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-101"
+              className="w-full bg-[#FF2625] hover:bg-[#e0201f] text-white py-3 rounded-md font-bold text-sm shadow-sm shadow-red-500/20 flex items-center justify-center gap-2 cursor-pointer transition-colors"
             >
               <Play className="w-4 h-4 fill-current" /> Start This Routine
             </button>
@@ -132,13 +132,13 @@ const Plans: React.FC = () => {
       {/* CREATE ROUTINE MODAL */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-xl w-full max-w-lg p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-gray-900">Create Custom Routine</h3>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(false)}
-                className="p-2 text-gray-400 hover:bg-gray-100 rounded-xl"
+                className="p-2 text-gray-400 hover:bg-gray-100 rounded-md"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -155,7 +155,7 @@ const Plans: React.FC = () => {
                   value={routineName}
                   onChange={(e) => setRoutineName(e.target.value)}
                   placeholder="e.g. Upper Body Hypertrophy"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#FF2625]"
+                  className="w-full px-4 py-2 rounded-md border border-gray-200 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#FF2625]"
                 />
               </div>
 
@@ -166,7 +166,7 @@ const Plans: React.FC = () => {
                 <select
                   value={routineCategory}
                   onChange={(e) => setRoutineCategory(e.target.value as any)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold"
+                  className="w-full px-3 py-2 rounded-md border border-gray-200 text-sm font-semibold"
                 >
                   <option value="PPL">Push / Pull / Legs (PPL)</option>
                   <option value="Upper/Lower">Upper / Lower</option>
@@ -184,7 +184,7 @@ const Plans: React.FC = () => {
                   value={routineDescription}
                   onChange={(e) => setRoutineDescription(e.target.value)}
                   placeholder="Goals, target muscle groups, tempo..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium"
+                  className="w-full px-4 py-2 rounded-md border border-gray-200 text-sm font-medium"
                 />
               </div>
 
@@ -197,7 +197,7 @@ const Plans: React.FC = () => {
                   value={routineExercises}
                   onChange={(e) => setRoutineExercises(e.target.value)}
                   placeholder="Barbell Bench Press&#10;Incline Dumbbell Press&#10;Triceps Pushdown"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium"
+                  className="w-full px-4 py-2 rounded-md border border-gray-200 text-sm font-medium"
                 />
               </div>
 
@@ -205,13 +205,13 @@ const Plans: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-600 font-semibold text-sm"
+                  className="px-4 py-2 rounded-md text-gray-600 font-semibold text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#FF2625] hover:bg-[#e0201f] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md"
+                  className="bg-[#FF2625] hover:bg-[#e0201f] text-white px-5 py-2 rounded-md font-bold text-sm shadow-xs"
                 >
                   Save Routine
                 </button>

@@ -57,7 +57,20 @@ const ExerciseDetail: React.FC = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 pt-2">
+        <a href="/" className="hover:text-gray-900 transition-colors">
+          Home
+        </a>
+        <span>/</span>
+        <a href="/exercises" className="hover:text-gray-900 transition-colors">
+          Exercises
+        </a>
+        <span>/</span>
+        <span className="text-[#FF2625] capitalize font-bold">{exerciseDetail.name}</span>
+      </div>
+
       <Detail exerciseDetail={exerciseDetail} />
       <ExercisesVideo
         exerciseVideo={exerciseVideos}

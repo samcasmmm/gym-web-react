@@ -15,30 +15,30 @@ const SimilarExercises: React.FC<SimilarExercisesProps> = ({
   isLoading,
 }) => {
   return (
-    <section className="mt-16 sm:mt-24 p-5 flex flex-col gap-12">
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-          Exercises That Target The <span className="text-[#FF2625]">Same Muscle Group</span>
+    <section className="mt-12 sm:mt-16 flex flex-col gap-10">
+      <div className="bg-white rounded-xl p-6 sm:p-8 border border-gray-200/80 shadow-xs">
+        <h2 className="text-xl sm:text-2xl font-black text-gray-900 mb-4">
+          Exercises That Target The <span className="text-[#FF2625] capitalize">Same Muscle Group</span>
         </h2>
         {isLoading ? (
           <Loader />
         ) : targetMuscleVideo && targetMuscleVideo.length > 0 ? (
           <HorizontalScrollbar data={targetMuscleVideo} />
         ) : (
-          <p className="text-gray-500 italic p-4">No similar muscle exercises found.</p>
+          <p className="text-gray-500 italic p-4 text-xs">No similar muscle exercises found.</p>
         )}
       </div>
 
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-          Exercises That Use The <span className="text-[#FF2625]">Same Equipment</span>
+      <div className="bg-white rounded-xl p-6 sm:p-8 border border-gray-200/80 shadow-xs">
+        <h2 className="text-xl sm:text-2xl font-black text-gray-900 mb-4">
+          Exercises That Use The <span className="text-[#FF2625] capitalize">Same Equipment</span>
         </h2>
         {isLoading ? (
           <Loader />
         ) : equipmentExericses && equipmentExericses.length > 0 ? (
           <HorizontalScrollbar data={equipmentExericses} />
         ) : (
-          <p className="text-gray-500 italic p-4">No similar equipment exercises found.</p>
+          <p className="text-gray-500 italic p-4 text-xs">No similar equipment exercises found.</p>
         )}
       </div>
     </section>
