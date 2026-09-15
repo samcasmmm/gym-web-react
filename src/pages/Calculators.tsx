@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useWorkout } from '../context/WorkoutContext';
 import { db } from '../db/database';
 import {
@@ -13,23 +13,25 @@ import {
   Sparkles,
   CheckCircle2,
   Share2,
-  Apple,
   Dumbbell,
   Droplets,
-  Award,
   ChevronRight,
   RefreshCw,
-  Info,
-  Clock,
-  ArrowUpRight,
   Minus,
   Plus,
-  Compass,
+  Beef,
+  Hourglass,
+  Layers,
+  Utensils,
+  Clock,
 } from 'lucide-react';
 
 export type CalculatorTab =
   | 'bmi'
   | 'calorie'
+  | 'protein'
+  | 'fasting'
+  | 'carbcycling'
   | 'bodyfat'
   | 'bmr'
   | 'idealweight'
@@ -63,6 +65,8 @@ const Calculators: React.FC = () => {
         if (unitSystem === 'metric') {
           setBmiWeightKg(latest.weight);
           setCalWeightKg(latest.weight);
+          setProteinWeightKg(latest.weight);
+          setCarbWeightKg(latest.weight);
           setBfWeightKg(latest.weight);
           setBmrWeightKg(latest.weight);
           setHydrationWeightKg(latest.weight);
@@ -165,7 +169,7 @@ const Calculators: React.FC = () => {
 
     // Energy distribution components
     const bmrPortion = Math.round(bmr);
-    const tefPortion = Math.round(targetCal * 0.1); // Thermic Effect of Food
+    const tefPortion = Math.round(targetCal * 0.1);
     const neatPortion = Math.round((tdee - bmr) * 0.4);
     const eatPortion = Math.round((tdee - bmr) * 0.6);
 
@@ -200,7 +204,6 @@ const Calculators: React.FC = () => {
     const fatGrams = Math.round(fatCals / 9);
     const carbGrams = Math.round(carbCals / 4);
 
-    // Weight shift timeline estimation (e.g. 1kg fat ~= 7700 kcal)
     const weeklyKgChange = Number(((goalDelta * 7) / 7700).toFixed(2));
     const weeklyLbsChange = Number((weeklyKgChange * 2.20462).toFixed(2));
 
@@ -225,7 +228,146 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 3. BODY FAT CALCULATOR (US Navy Standard)
+  // 3. PROTEIN & LEUCINE INTAKE OPTIMIZER (NEW)
+  // ----------------------------------------------------
+  const [proteinWeightKg, setProteinWeightKg] = useState<number>(76);
+  const [proteinGoal, setProteinGoal] = useState<'maintain' | 'hypertrophy' | 'cutting' | 'endurance'>('hypertrophy');
+  const [proteinMealsCount, setProteinMealsCount] = useState<number>(4);
+
+  const calculateProtein = () => {
+    let multiplier = 2.0; // g/kg
+    if (proteinGoal === 'maintain') multiplier = 1.4;
+    if (proteinGoal === 'hypertrophy') multiplier = 2.0;
+    if (proteinGoal === 'cutting') multiplier = 2.4;
+    if (proteinGoal === 'endurance') multiplier = 1.6;
+
+    const totalGrams = Math.round(proteinWeightKg * multiplier);
+    const totalCals = totalGrams * 4;
+    const perMealGrams = Math.round(totalGrams / proteinMealsCount);
+    const leucineGrams = Number((perMealGrams * 0.085).toFixed(1)); // ~8.5% leucine content
+
+    // Food equivalents for 1 meal
+    const chickenBreastG = Math.round((perMealGrams / 31) * 100);
+    const wheyScoops = Number((perMealGrams / 25).toFixed(1));
+    const wholeEggs = Math.round(perMealGrams / 6);
+    const greekYogurtG = Math.round((perMealGrams / 10) * 100);
+    const tofuG = Math.round((perMealGrams / 15) * 100);
+
+    return {
+      multiplier,
+      totalGrams,
+      totalCals,
+      perMealGrams,
+      leucineGrams,
+      chickenBreastG,
+      wheyScoops,
+      wholeEggs,
+      greekYogurtG,
+      tofuG,
+    };
+  };
+
+  // ----------------------------------------------------
+  // 4. INTERMITTENT FASTING & EATING WINDOW (NEW)
+  // ----------------------------------------------------
+  const [fastingProtocol, setFastingProtocol] = useState<'16_8' | '18_6' | '20_4' | '14_10' | '12_12'>('16_8');
+  const [firstMealHour, setFirstMealHour] = useState<number>(12); // 12:00 PM
+
+  const calculateFasting = () => {
+    let fastHours = 16;
+    let eatHours = 8;
+    if (fastingProtocol === '14_10') {
+      fastHours = 14;
+      eatHours = 10;
+    } else if (fastingProtocol === '18_6') {
+      fastHours = 18;
+      eatHours = 6;
+    } else if (fastingProtocol === '20_4') {
+      fastHours = 20;
+      eatHours = 4;
+    } else if (fastingProtocol === '12_12') {
+      fastHours = 12;
+      eatHours = 12;
+    }
+
+    const endHour = (firstMealHour + eatHours) % 24;
+    const formatHour = (h: number) => {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const displayH = h % 12 === 0 ? 12 : h % 12;
+      return `${displayH}:00 ${ampm}`;
+    };
+
+    const eatingWindowStr = `${formatHour(firstMealHour)} – ${formatHour(endHour)}`;
+    const fastingWindowStr = `${formatHour(endHour)} – ${formatHour(firstMealHour)} (Next Day)`;
+
+    const milestones = [
+      { hr: '0–4h', label: 'Anabolic / Digestion', desc: 'Blood glucose rises, insulin shuttles nutrients to tissues' },
+      { hr: '4–8h', label: 'Post-Absorptive Phase', desc: 'Blood sugar normalizes, liver glycogen utilization begins' },
+      { hr: '12–14h', label: 'Fat Oxidation & Ketosis', desc: 'Free fatty acid mobilization ramps up significantly' },
+      { hr: '16–18h', label: 'Autophagy Activation', desc: 'Cellular cleanup, damaged mitochondria recycling peaks' },
+      { hr: '20h+', label: 'HGH & Deep Repair', desc: 'Human Growth Hormone surges to preserve lean muscle' },
+    ];
+
+    return {
+      fastHours,
+      eatHours,
+      eatingWindowStr,
+      fastingWindowStr,
+      startStr: formatHour(firstMealHour),
+      endStr: formatHour(endHour),
+      milestones,
+    };
+  };
+
+  // ----------------------------------------------------
+  // 5. CARB CYCLING & GLYCOGEN REFEED PLANNER (NEW)
+  // ----------------------------------------------------
+  const [carbWeightKg, setCarbWeightKg] = useState<number>(76);
+  const [carbTdee, setCarbTdee] = useState<number>(2400);
+
+  const calculateCarbCycling = () => {
+    // High Carb (Heavy Leg / Back training days) - TDEE + 10%
+    const highCals = Math.round(carbTdee * 1.1);
+    const highProteinG = Math.round(carbWeightKg * 2.0);
+    const highFatG = Math.round(carbWeightKg * 0.6);
+    const highCarbG = Math.round((highCals - highProteinG * 4 - highFatG * 9) / 4);
+
+    // Moderate Carb (Upper body / standard training days) - TDEE - 10%
+    const modCals = Math.round(carbTdee * 0.9);
+    const modProteinG = Math.round(carbWeightKg * 2.0);
+    const modFatG = Math.round(carbWeightKg * 0.8);
+    const modCarbG = Math.round((modCals - modProteinG * 4 - modFatG * 9) / 4);
+
+    // Low Carb / Rest Days - TDEE - 25%
+    const lowCals = Math.round(carbTdee * 0.75);
+    const lowProteinG = Math.round(carbWeightKg * 2.2);
+    const lowFatG = Math.round(carbWeightKg * 1.0);
+    const lowCarbG = Math.max(30, Math.round((lowCals - lowProteinG * 4 - lowFatG * 9) / 4));
+
+    // Weekly average on 2 High, 3 Moderate, 2 Low days
+    const weeklyAvgCals = Math.round((highCals * 2 + modCals * 3 + lowCals * 2) / 7);
+    const weeklyDeficit = Math.round((carbTdee - weeklyAvgCals) * 7);
+
+    return {
+      highCals,
+      highProteinG,
+      highFatG,
+      highCarbG,
+      modCals,
+      modProteinG,
+      modFatG,
+      modCarbG,
+      lowCals,
+      lowProteinG,
+      lowFatG,
+      lowCarbG,
+      weeklyAvgCals,
+      weeklyDeficit,
+    };
+  };
+
+  // ----------------------------------------------------
+  // 6. BODY FAT CALCULATOR (US NAVY STANDARD)
   // ----------------------------------------------------
   const [bfGender, setBfGender] = useState<'male' | 'female'>('male');
   const [bfHeightCm, setBfHeightCm] = useState<number>(178);
@@ -275,7 +417,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 4. BMR MULTI-FORMULA CALCULATOR
+  // 7. BMR MULTI-FORMULA CALCULATOR
   // ----------------------------------------------------
   const [bmrAge, setBmrAge] = useState<number>(25);
   const [bmrGender, setBmrGender] = useState<'male' | 'female'>('male');
@@ -311,7 +453,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 5. IDEAL WEIGHT CALCULATOR (MULTI-CLINICAL FORMULAS)
+  // 8. IDEAL WEIGHT CALCULATOR
   // ----------------------------------------------------
   const [iwGender, setIwGender] = useState<'male' | 'female'>('male');
   const [iwHeightCm, setIwHeightCm] = useState<number>(178);
@@ -352,18 +494,15 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 6. ONE-REP MAX (1RM) & STRENGTH LOAD MATRIX
+  // 9. ONE-REP MAX (1RM) & STRENGTH LOAD MATRIX
   // ----------------------------------------------------
   const [liftWeight, setLiftWeight] = useState<number>(100);
   const [liftReps, setLiftReps] = useState<number>(5);
   const [selectedLift, setSelectedLift] = useState<'bench' | 'squat' | 'deadlift' | 'ohp'>('bench');
 
   const calculateOneRepMax = () => {
-    // Epley Formula: 1RM = Weight * (1 + Reps/30)
     const epley = liftWeight * (1 + liftReps / 30);
-    // Brzycki Formula: 1RM = Weight * (36 / (37 - Reps))
     const brzycki = liftReps < 37 ? liftWeight * (36 / (37 - liftReps)) : epley;
-    // Lombardi Formula: 1RM = Weight * Reps^0.1
     const lombardi = liftWeight * Math.pow(liftReps, 0.1);
 
     const avg1RM = Math.round((epley + brzycki + lombardi) / 3);
@@ -389,24 +528,21 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 7. HYDRATION & DAILY WATER INTAKE ENGINE
+  // 10. HYDRATION & DAILY WATER INTAKE
   // ----------------------------------------------------
   const [hydrationWeightKg, setHydrationWeightKg] = useState<number>(75);
   const [workoutMinutes, setWorkoutMinutes] = useState<number>(60);
   const [climate, setClimate] = useState<'temperate' | 'hot' | 'humid'>('temperate');
 
   const calculateHydration = () => {
-    // Base: 35ml per kg of body weight
     let baseMl = hydrationWeightKg * 35;
-    // Exercise sweating: ~12ml per minute of active workout
     let sweatMl = workoutMinutes * 12;
-    // Climate adjustment
     if (climate === 'hot') baseMl *= 1.15;
     if (climate === 'humid') baseMl *= 1.25;
 
     const totalMl = Math.round(baseMl + sweatMl);
     const totalOz = Math.round(totalMl * 0.033814);
-    const glasses = Math.round(totalMl / 250); // 250ml glasses
+    const glasses = Math.round(totalMl / 250);
 
     const schedule = [
       { time: 'Upon Waking', amount: '500 ml', desc: 'Kickstarts metabolism and clears sleep dehydration' },
@@ -420,7 +556,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 8. CARDIO & PACE CALCULATOR
+  // 11. CARDIO & PACE CALCULATOR
   // ----------------------------------------------------
   const [paceDistKm, setPaceDistKm] = useState<number>(10);
   const [paceHours, setPaceHours] = useState<number>(0);
@@ -471,7 +607,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 9. PREGNANCY TRACKER (CLINICAL NAEGELE)
+  // 12. PREGNANCY TRACKER
   // ----------------------------------------------------
   const [lmpDate, setLmpDate] = useState<string>(() => {
     const d = new Date();
@@ -539,7 +675,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 10. CONCEPTION CALCULATOR
+  // 13. CONCEPTION CALCULATOR
   // ----------------------------------------------------
   const [conceptionLmpDate, setConceptionLmpDate] = useState<string>(() => {
     const d = new Date();
@@ -560,7 +696,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 11. DUE DATE CALCULATOR
+  // 14. DUE DATE CALCULATOR
   // ----------------------------------------------------
   const [dueDateLmp, setDueDateLmp] = useState<string>(() => {
     const d = new Date();
@@ -605,6 +741,9 @@ const Calculators: React.FC = () => {
   // Calculation Results
   const bmiResult = calculateBMI();
   const calorieResult = calculateCalories();
+  const proteinResult = calculateProtein();
+  const fastingResult = calculateFasting();
+  const carbCyclingResult = calculateCarbCycling();
   const bfResult = calculateBodyFat();
   const bmrResult = calculateBMRs();
   const iwResult = calculateIdealWeight();
@@ -615,8 +754,18 @@ const Calculators: React.FC = () => {
   const conceptionResult = calculateConception();
   const dueDateResult = calculateDueDate();
 
-  // Categorized Hub Configuration
+  // Categorized Hub Configuration (14 Precision Engines)
   const categoryGroups: CategoryGroup[] = [
+    {
+      name: 'Nutrition & Energy Balance',
+      tabs: [
+        { id: 'calorie', name: 'Calorie & TDEE', icon: Flame, tag: 'Macro Dial', desc: 'Expenditure, deficit timeline & macro splits' },
+        { id: 'protein', name: 'Protein Optimizer', icon: Beef, tag: 'MPS & Leucine', desc: 'Daily target, meal distribution & food portions' },
+        { id: 'fasting', name: 'Intermittent Fasting', icon: Hourglass, tag: 'Autophagy Clock', desc: '16:8, 18:6 eating windows & metabolic timeline' },
+        { id: 'carbcycling', name: 'Carb Cycling & Refeed', icon: Layers, tag: 'High/Mod/Low Split', desc: 'Training day fuel vs rest day fat oxidation' },
+        { id: 'bmr', name: 'BMR Engine', icon: Zap, tag: 'Basal Multi-Formula', desc: 'Mifflin, Harris-Benedict & Katch-McArdle' },
+      ],
+    },
     {
       name: 'Body Composition & Physique',
       tabs: [
@@ -631,13 +780,6 @@ const Calculators: React.FC = () => {
         { id: 'onerm', name: '1RM Strength', icon: Dumbbell, tag: 'RPE & Percentages', desc: 'One rep max & loading matrix for barbell lifts' },
         { id: 'pace', name: 'Running & Pace', icon: Timer, tag: 'Splits & HR Zones', desc: 'Race finish predictor and aerobic training zones' },
         { id: 'hydration', name: 'Daily Hydration', icon: Droplets, tag: 'Electrolytes & Schedule', desc: 'Fluid requirement based on sweat & climate' },
-      ],
-    },
-    {
-      name: 'Nutrition & Energy Balance',
-      tabs: [
-        { id: 'calorie', name: 'Calorie & TDEE', icon: Flame, tag: 'Macro Dial', desc: 'Expenditure, deficit timeline & macro splits' },
-        { id: 'bmr', name: 'BMR Engine', icon: Zap, tag: 'Basal Multi-Formula', desc: 'Mifflin, Harris-Benedict & Katch-McArdle' },
       ],
     },
     {
@@ -677,7 +819,7 @@ const Calculators: React.FC = () => {
           <div className='space-y-2.5'>
             <div className='inline-flex items-center gap-2 px-3 py-1 rounded-md bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-wider'>
               <Sparkles className='w-3.5 h-3.5 text-[#FF2625]' />
-              11 Precision Clinical & Performance Engines
+              14 Precision Clinical & Performance Engines
             </div>
             <h1 className='text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3'>
               Calculators Hub
@@ -686,8 +828,8 @@ const Calculators: React.FC = () => {
               </span>
             </h1>
             <p className='text-gray-300 text-xs sm:text-sm max-w-2xl leading-relaxed'>
-              Science-backed algorithms with live dials, macro proportion rings, race split matrices, 1RM load tables, and
-              instant IndexedDB profile synchronization.
+              Science-backed algorithms with live dials, protein & leucine optimization, fasting clocks, carb cycling, race
+              split matrices, and instant IndexedDB synchronization.
             </p>
           </div>
 
@@ -731,7 +873,7 @@ const Calculators: React.FC = () => {
           <div className='w-full sm:w-72'>
             <input
               type='text'
-              placeholder='Search calculators (e.g., 1RM, TDEE, Pace)...'
+              placeholder='Search calculators (e.g., Protein, Fasting, TDEE)...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className='w-full px-3.5 py-1.5 text-xs bg-white/10 border border-white/20 rounded-md text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF2625]'
@@ -746,6 +888,8 @@ const Calculators: React.FC = () => {
                 setBmiHeightCm(180);
                 setCalWeightKg(82);
                 setCalHeightCm(180);
+                setProteinWeightKg(82);
+                setCarbWeightKg(82);
                 setCalActivity(1.725);
                 setTargetGoal('cut500');
                 setMacroPreset('highprotein');
@@ -764,6 +908,8 @@ const Calculators: React.FC = () => {
                 setBmiHeightCm(165);
                 setCalWeightKg(58);
                 setCalHeightCm(165);
+                setProteinWeightKg(58);
+                setCarbWeightKg(58);
                 setCalActivity(1.55);
                 setTargetGoal('maintain');
                 setMacroPreset('balanced');
@@ -847,7 +993,7 @@ const Calculators: React.FC = () => {
       {/* 3. ACTIVE CALCULATOR WORKSPACE */}
       <div className='bg-white rounded-xl p-6 sm:p-8 border border-gray-200/80 shadow-xs'>
         {/* ==================================================== */}
-        {/* TAB 1: BMI CALCULATOR (WITH DYNAMIC RADIAL SPEEDOMETER) */}
+        {/* TAB 1: BMI CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'bmi' && (
           <div className='space-y-6'>
@@ -1025,7 +1171,7 @@ const Calculators: React.FC = () => {
                 </div>
               </div>
 
-              {/* Visual Interactive Gauge Display - Height Locked & Fixed */}
+              {/* Visual Interactive Gauge Display */}
               <div className='lg:col-span-6 bg-linear-to-b from-gray-900 to-gray-950 rounded-xl p-6 text-white border border-gray-800 shadow-lg flex flex-col justify-between min-h-[485px] h-full'>
                 <div className='flex items-center justify-between'>
                   <span className='text-xs font-bold uppercase tracking-wider text-gray-400'>Live Biometric Readout</span>
@@ -1226,7 +1372,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 2: CALORIE & TDEE (WITH MACRO DONUT & DEFICIT SPEED) */}
+        {/* TAB 2: CALORIE & TDEE */}
         {/* ==================================================== */}
         {activeTab === 'calorie' && (
           <div className='space-y-6'>
@@ -1462,7 +1608,396 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 3: BODY FAT % (US NAVY TAPE METHOD) */}
+        {/* TAB 3: PROTEIN & LEUCINE OPTIMIZER (NEW) */}
+        {/* ==================================================== */}
+        {activeTab === 'protein' && (
+          <div className='space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
+              <div>
+                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
+                  <Beef className='w-6 h-6 text-red-600' />
+                  Protein & Leucine MPS Optimizer
+                </h2>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Calculates optimal daily protein intake, per-meal leucine threshold (2.7g - 3.5g) to trigger Muscle Protein Synthesis (MPS), and food portions.
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() =>
+                  handleCopySummary(
+                    `Daily Protein: ${proteinResult.totalGrams}g/day (${proteinResult.perMealGrams}g x ${proteinMealsCount} meals) | Leucine: ~${proteinResult.leucineGrams}g/meal`
+                  )
+                }
+                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
+              >
+                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
+              </button>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+              <div className='lg:col-span-5 space-y-4'>
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Body Weight</span>
+                    <span className='font-mono text-[#FF2625]'>{proteinWeightKg} kg</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='40'
+                    max='160'
+                    value={proteinWeightKg}
+                    onChange={(e) => setProteinWeightKg(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Training Objective</label>
+                  <div className='grid grid-cols-2 gap-2 text-xs'>
+                    {[
+                      { id: 'hypertrophy', label: '💪 Hypertrophy (2.0 g/kg)', desc: 'Max muscle protein synthesis' },
+                      { id: 'cutting', label: '🔥 Cutting Deficit (2.4 g/kg)', desc: 'Preserves lean mass in deficit' },
+                      { id: 'endurance', label: '🏃 Endurance (1.6 g/kg)', desc: 'Tissue repair for runners' },
+                      { id: 'maintain', label: '⚖️ Maintenance (1.4 g/kg)', desc: 'General health balance' },
+                    ].map((g) => (
+                      <button
+                        key={g.id}
+                        type='button'
+                        onClick={() => setProteinGoal(g.id as any)}
+                        className={`p-2.5 rounded-md text-left border transition-all cursor-pointer ${
+                          proteinGoal === g.id
+                            ? 'bg-red-50 border-[#FF2625] text-red-950 font-bold'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className='block text-xs font-bold'>{g.label}</span>
+                        <span className='text-[10px] text-gray-400 font-normal'>{g.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Meals / Feedings Per Day</span>
+                    <span className='font-mono text-[#FF2625]'>{proteinMealsCount} meals</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='2'
+                    max='6'
+                    value={proteinMealsCount}
+                    onChange={(e) => setProteinMealsCount(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+              </div>
+
+              {/* Protein Results Display */}
+              <div className='lg:col-span-7 bg-linear-to-b from-gray-900 to-gray-950 rounded-xl p-6 text-white border border-gray-800 shadow-lg space-y-5'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400'>Daily Protein Target</span>
+                  <span className='px-2.5 py-0.5 rounded-sm text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/30'>
+                    {proteinResult.multiplier} g / kg
+                  </span>
+                </div>
+
+                <div className='grid grid-cols-2 gap-3 text-center'>
+                  <div className='p-4 bg-white/5 rounded-xl border border-white/10'>
+                    <span className='text-[10px] text-gray-400 uppercase font-bold block'>Total Daily Protein</span>
+                    <strong className='text-3xl font-black text-red-400'>{proteinResult.totalGrams}g</strong>
+                    <span className='text-[10px] text-gray-500 block'>{proteinResult.totalCals} kcal</span>
+                  </div>
+                  <div className='p-4 bg-white/5 rounded-xl border border-white/10'>
+                    <span className='text-[10px] text-gray-400 uppercase font-bold block'>Per-Meal Bolus</span>
+                    <strong className='text-3xl font-black text-amber-400'>{proteinResult.perMealGrams}g</strong>
+                    <span className='text-[10px] text-emerald-400 block'>~{proteinResult.leucineGrams}g Leucine (MPS Hit)</span>
+                  </div>
+                </div>
+
+                {/* 1-Meal Equivalent Food Portions */}
+                <div className='space-y-2 pt-2 border-t border-white/10'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400 block'>
+                    Food Portions to Hit {proteinResult.perMealGrams}g in 1 Meal
+                  </span>
+                  <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs'>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-gray-400 block text-[10px] font-bold'>🍗 Chicken Breast</span>
+                      <strong className='text-white font-mono text-sm'>{proteinResult.chickenBreastG} g</strong>
+                    </div>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-gray-400 block text-[10px] font-bold'>🥛 Whey Isolate</span>
+                      <strong className='text-white font-mono text-sm'>{proteinResult.wheyScoops} scoops</strong>
+                    </div>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-gray-400 block text-[10px] font-bold'>🍳 Whole Eggs</span>
+                      <strong className='text-white font-mono text-sm'>{proteinResult.wholeEggs} eggs</strong>
+                    </div>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-gray-400 block text-[10px] font-bold'>🥣 Greek Yogurt (0%)</span>
+                      <strong className='text-white font-mono text-sm'>{proteinResult.greekYogurtG} g</strong>
+                    </div>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-gray-400 block text-[10px] font-bold'>🌱 Firm Tofu</span>
+                      <strong className='text-white font-mono text-sm'>{proteinResult.tofuG} g</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 4: INTERMITTENT FASTING & EATING WINDOW (NEW) */}
+        {/* ==================================================== */}
+        {activeTab === 'fasting' && (
+          <div className='space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
+              <div>
+                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
+                  <Hourglass className='w-6 h-6 text-purple-600' />
+                  Intermittent Fasting & Circadian Window
+                </h2>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Maps your daily feeding & fasting windows, autophagy timeline, and metabolic shifts.
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() =>
+                  handleCopySummary(
+                    `Fasting Protocol: ${fastingResult.fastHours}:${fastingResult.eatHours} | Eating Window: ${fastingResult.eatingWindowStr} | Fasting: ${fastingResult.fastingWindowStr}`
+                  )
+                }
+                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
+              >
+                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
+              </button>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+              <div className='lg:col-span-5 space-y-4'>
+                <div>
+                  <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Fasting Protocol</label>
+                  <div className='grid grid-cols-2 gap-2 text-xs'>
+                    {[
+                      { id: '16_8', name: '16:8 LeanGains', desc: 'Standard & most popular protocol' },
+                      { id: '18_6', name: '18:6 Fat Burn', desc: 'Accelerated autophagy window' },
+                      { id: '20_4', name: '20:4 Warrior Diet', desc: 'Single main feast window' },
+                      { id: '14_10', name: '14:10 Gentle', desc: 'Great for beginners & active women' },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type='button'
+                        onClick={() => setFastingProtocol(p.id as any)}
+                        className={`p-2.5 rounded-md text-left border transition-all cursor-pointer ${
+                          fastingProtocol === p.id
+                            ? 'bg-purple-50 border-purple-500 text-purple-950 font-bold'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className='block text-xs font-bold'>{p.name}</span>
+                        <span className='text-[10px] text-gray-400 font-normal'>{p.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>First Meal Time (Break-Fast)</span>
+                    <span className='font-mono text-purple-600 font-bold'>{fastingResult.startStr}</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='6'
+                    max='18'
+                    value={firstMealHour}
+                    onChange={(e) => setFirstMealHour(Number(e.target.value))}
+                    className='w-full accent-purple-600 cursor-pointer'
+                  />
+                </div>
+              </div>
+
+              {/* Fasting Schedule & Milestones */}
+              <div className='lg:col-span-7 bg-linear-to-b from-purple-950 via-gray-900 to-gray-950 rounded-xl p-6 text-white border border-purple-900/50 shadow-lg space-y-5'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-purple-400'>Daily Schedule</span>
+                  <span className='px-2.5 py-0.5 rounded-sm text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30'>
+                    {fastingResult.fastHours}h Fast / {fastingResult.eatHours}h Feed
+                  </span>
+                </div>
+
+                <div className='grid grid-cols-2 gap-3 text-center'>
+                  <div className='p-3.5 bg-white/5 rounded-xl border border-emerald-500/30'>
+                    <span className='text-[10px] text-emerald-400 uppercase font-bold block'>🍽️ Eating Window ({fastingResult.eatHours}h)</span>
+                    <strong className='text-base font-black text-white font-mono'>{fastingResult.eatingWindowStr}</strong>
+                  </div>
+                  <div className='p-3.5 bg-white/5 rounded-xl border border-purple-500/30'>
+                    <span className='text-[10px] text-purple-400 uppercase font-bold block'>⏳ Fasting Window ({fastingResult.fastHours}h)</span>
+                    <strong className='text-base font-black text-white font-mono'>{fastingResult.fastingWindowStr}</strong>
+                  </div>
+                </div>
+
+                {/* Metabolic Shifts Timeline */}
+                <div className='space-y-2 pt-1'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400 block'>
+                    Fasting Metabolic Timeline
+                  </span>
+                  <div className='divide-y divide-white/10 text-xs'>
+                    {fastingResult.milestones.map((m, idx) => (
+                      <div key={idx} className='py-2 flex items-center justify-between gap-3'>
+                        <div className='flex items-center gap-2'>
+                          <span className='w-12 font-bold font-mono text-purple-300'>{m.hr}</span>
+                          <div>
+                            <strong className='text-white block font-bold'>{m.label}</strong>
+                            <span className='text-[10px] text-gray-400'>{m.desc}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 5: CARB CYCLING & REFEED PLANNER (NEW) */}
+        {/* ==================================================== */}
+        {activeTab === 'carbcycling' && (
+          <div className='space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
+              <div>
+                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
+                  <Layers className='w-6 h-6 text-amber-500' />
+                  Carb Cycling & Glycogen Refeed Planner
+                </h2>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Optimizes insulin sensitivity and leptin levels by cycling High Carb (leg/back days), Moderate Carb (push/pull), and Low Carb (rest days).
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() =>
+                  handleCopySummary(
+                    `Carb Cycling Split: High Carb (${carbCyclingResult.highCals} kcal / ${carbCyclingResult.highCarbG}g C) | Mod (${carbCyclingResult.modCals} kcal / ${carbCyclingResult.modCarbG}g C) | Low (${carbCyclingResult.lowCals} kcal / ${carbCyclingResult.lowCarbG}g C)`
+                  )
+                }
+                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
+              >
+                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
+              </button>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+              <div className='lg:col-span-5 space-y-4'>
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Body Weight</span>
+                    <span className='font-mono text-[#FF2625]'>{carbWeightKg} kg</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='40'
+                    max='160'
+                    value={carbWeightKg}
+                    onChange={(e) => setCarbWeightKg(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Base TDEE Maintenance</span>
+                    <span className='font-mono text-[#FF2625]'>{carbTdee} kcal</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='1500'
+                    max='4000'
+                    step='50'
+                    value={carbTdee}
+                    onChange={(e) => setCarbTdee(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+              </div>
+
+              {/* 3-Tier Cycling Cards */}
+              <div className='lg:col-span-7 space-y-3'>
+                <div className='p-4 rounded-xl bg-red-50/80 border border-red-200 space-y-2 text-xs'>
+                  <div className='flex justify-between items-center'>
+                    <span className='font-bold text-red-700 uppercase'>⚡ High Carb Days (2x/week: Leg / Back Day)</span>
+                    <strong className='text-sm font-black text-gray-950 font-mono'>{carbCyclingResult.highCals} kcal</strong>
+                  </div>
+                  <div className='grid grid-cols-3 gap-2 text-center text-gray-800'>
+                    <div className='bg-white p-2 rounded border border-red-200'>
+                      <span className='text-[10px] text-gray-400 block'>Carbs</span>
+                      <strong className='text-red-600'>{carbCyclingResult.highCarbG}g</strong>
+                    </div>
+                    <div className='bg-white p-2 rounded border border-red-200'>
+                      <span className='text-[10px] text-gray-400 block'>Protein</span>
+                      <strong>{carbCyclingResult.highProteinG}g</strong>
+                    </div>
+                    <div className='bg-white p-2 rounded border border-red-200'>
+                      <span className='text-[10px] text-gray-400 block'>Fat (Low)</span>
+                      <strong>{carbCyclingResult.highFatG}g</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-2 text-xs'>
+                  <div className='flex justify-between items-center'>
+                    <span className='font-bold text-amber-800 uppercase'>⚖️ Moderate Carb Days (3x/week: Push / Pull)</span>
+                    <strong className='text-sm font-black text-gray-950 font-mono'>{carbCyclingResult.modCals} kcal</strong>
+                  </div>
+                  <div className='grid grid-cols-3 gap-2 text-center text-gray-800'>
+                    <div className='bg-white p-2 rounded border border-amber-200'>
+                      <span className='text-[10px] text-gray-400 block'>Carbs</span>
+                      <strong className='text-amber-600'>{carbCyclingResult.modCarbG}g</strong>
+                    </div>
+                    <div className='bg-white p-2 rounded border border-amber-200'>
+                      <span className='text-[10px] text-gray-400 block'>Protein</span>
+                      <strong>{carbCyclingResult.modProteinG}g</strong>
+                    </div>
+                    <div className='bg-white p-2 rounded border border-amber-200'>
+                      <span className='text-[10px] text-gray-400 block'>Fat</span>
+                      <strong>{carbCyclingResult.modFatG}g</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='p-4 rounded-xl bg-sky-50/80 border border-sky-200 space-y-2 text-xs'>
+                  <div className='flex justify-between items-center'>
+                    <span className='font-bold text-sky-800 uppercase'>💤 Low Carb Days (2x/week: Rest Days)</span>
+                    <strong className='text-sm font-black text-gray-950 font-mono'>{carbCyclingResult.lowCals} kcal</strong>
+                  </div>
+                  <div className='grid grid-cols-3 gap-2 text-center text-gray-800'>
+                    <div className='bg-white p-2 rounded border border-sky-200'>
+                      <span className='text-[10px] text-gray-400 block'>Carbs (Low)</span>
+                      <strong className='text-sky-600'>{carbCyclingResult.lowCarbG}g</strong>
+                    </div>
+                    <div className='bg-white p-2 rounded border border-sky-200'>
+                      <span className='text-[10px] text-gray-400 block'>Protein (High)</span>
+                      <strong>{carbCyclingResult.lowProteinG}g</strong>
+                    </div>
+                    <div className='bg-white p-2 rounded border border-sky-200'>
+                      <span className='text-[10px] text-gray-400 block'>Fat (High)</span>
+                      <strong>{carbCyclingResult.lowFatG}g</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 6: BODY FAT % (US NAVY TAPE METHOD) */}
         {/* ==================================================== */}
         {activeTab === 'bodyfat' && (
           <div className='space-y-6'>
@@ -1643,267 +2178,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 4: 1RM (ONE REP MAX) & STRENGTH LOAD MATRIX */}
-        {/* ==================================================== */}
-        {activeTab === 'onerm' && (
-          <div className='space-y-6'>
-            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
-              <div>
-                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
-                  <Dumbbell className='w-6 h-6 text-[#FF2625]' />
-                  One-Rep Max (1RM) & Strength Load Matrix
-                </h2>
-                <p className='text-xs text-gray-500 mt-1'>
-                  Clinical Brzycki, Epley & Lombardi formulas predicting maximal lifting output and percentage loads.
-                </p>
-              </div>
-              <button
-                type='button'
-                onClick={() =>
-                  handleCopySummary(
-                    `Estimated 1RM (${selectedLift}): ${oneRmResult.avg1RM}${unitSystem === 'metric' ? 'kg' : 'lbs'} based on ${liftWeight} x ${liftReps} reps`
-                  )
-                }
-                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
-              >
-                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
-              </button>
-            </div>
-
-            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
-              {/* Lift Controls */}
-              <div className='lg:col-span-5 space-y-5'>
-                <div>
-                  <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Barbell Movement</label>
-                  <div className='grid grid-cols-2 gap-2'>
-                    {[
-                      { id: 'bench', name: 'Bench Press' },
-                      { id: 'squat', name: 'Back Squat' },
-                      { id: 'deadlift', name: 'Deadlift' },
-                      { id: 'ohp', name: 'Overhead Press' },
-                    ].map((lift) => (
-                      <button
-                        key={lift.id}
-                        type='button'
-                        onClick={() => setSelectedLift(lift.id as any)}
-                        className={`py-2 px-3 rounded-md text-xs font-bold border transition-colors cursor-pointer text-center ${
-                          selectedLift === lift.id
-                            ? 'bg-[#FF2625] text-white border-[#FF2625]'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        {lift.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className='space-y-1.5'>
-                  <div className='flex justify-between text-xs font-bold text-gray-700'>
-                    <span>Lifted Weight</span>
-                    <span className='font-mono text-[#FF2625]'>
-                      {liftWeight} {unitSystem === 'metric' ? 'kg' : 'lbs'}
-                    </span>
-                  </div>
-                  <input
-                    type='range'
-                    min='20'
-                    max='350'
-                    value={liftWeight}
-                    onChange={(e) => setLiftWeight(Number(e.target.value))}
-                    className='w-full accent-[#FF2625] cursor-pointer'
-                  />
-                </div>
-
-                <div className='space-y-1.5'>
-                  <div className='flex justify-between text-xs font-bold text-gray-700'>
-                    <span>Repetitions Completed</span>
-                    <span className='font-mono text-[#FF2625]'>{liftReps} reps</span>
-                  </div>
-                  <input
-                    type='range'
-                    min='1'
-                    max='12'
-                    value={liftReps}
-                    onChange={(e) => setLiftReps(Number(e.target.value))}
-                    className='w-full accent-[#FF2625] cursor-pointer'
-                  />
-                </div>
-
-                {/* 1RM Hero Card */}
-                <div className='p-4 rounded-xl bg-linear-to-br from-gray-950 to-gray-900 text-white border border-gray-800 text-center space-y-1'>
-                  <span className='text-[10px] uppercase font-bold tracking-widest text-red-400'>
-                    Predicted Absolute 1RM
-                  </span>
-                  <div className='text-4xl font-black font-mono text-white'>
-                    {oneRmResult.avg1RM}{' '}
-                    <span className='text-base font-bold text-gray-400'>{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
-                  </div>
-                  <div className='flex justify-center gap-3 text-[11px] text-gray-400 pt-1'>
-                    <span>Epley: {oneRmResult.epley}</span>
-                    <span>•</span>
-                    <span>Brzycki: {oneRmResult.brzycki}</span>
-                    <span>•</span>
-                    <span>Lombardi: {oneRmResult.lombardi}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Percentage Loading Matrix Table */}
-              <div className='lg:col-span-7 bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-xs font-bold uppercase tracking-wider text-gray-700'>Training Load Matrix</span>
-                  <span className='text-[11px] text-gray-500 font-medium'>Recommended Reps & Target Zones</span>
-                </div>
-
-                <div className='divide-y divide-gray-200 text-xs'>
-                  {oneRmResult.percentages.map((row) => (
-                    <div key={row.pct} className='py-2 flex items-center justify-between gap-2 hover:bg-gray-100/60 px-1 rounded transition-colors'>
-                      <div className='flex items-center gap-2'>
-                        <span className='w-12 font-black text-gray-900 font-mono'>{row.pct}%</span>
-                        <div>
-                          <span className='font-bold text-gray-800 block'>{row.reps}</span>
-                          <span className='text-[10px] text-gray-400'>{row.goal}</span>
-                        </div>
-                      </div>
-                      <div className='text-right'>
-                        <span className='font-black font-mono text-sm text-[#FF2625]'>
-                          {row.weight} {unitSystem === 'metric' ? 'kg' : 'lbs'}
-                        </span>
-                        <span className='block text-[10px] text-gray-400'>RPE {row.rpe}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================================================== */}
-        {/* TAB 5: DAILY HYDRATION & WATER INTAKE */}
-        {/* ==================================================== */}
-        {activeTab === 'hydration' && (
-          <div className='space-y-6'>
-            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
-              <div>
-                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
-                  <Droplets className='w-6 h-6 text-sky-500' />
-                  Daily Hydration & Fluid Optimization
-                </h2>
-                <p className='text-xs text-gray-500 mt-1'>
-                  Calculates cellular water requirements based on body mass, sweat rate, workout intensity, and climate.
-                </p>
-              </div>
-              <button
-                type='button'
-                onClick={() =>
-                  handleCopySummary(
-                    `Daily Water Target: ${hydrationResult.totalMl}ml (${hydrationResult.glasses} glasses) | Sweating: +${workoutMinutes}m workout`
-                  )
-                }
-                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
-              >
-                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
-              </button>
-            </div>
-
-            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
-              <div className='lg:col-span-5 space-y-4'>
-                <div className='space-y-1'>
-                  <div className='flex justify-between text-xs font-bold text-gray-700'>
-                    <span>Body Weight</span>
-                    <span className='font-mono text-[#FF2625]'>{hydrationWeightKg} kg</span>
-                  </div>
-                  <input
-                    type='range'
-                    min='40'
-                    max='160'
-                    value={hydrationWeightKg}
-                    onChange={(e) => setHydrationWeightKg(Number(e.target.value))}
-                    className='w-full accent-[#FF2625] cursor-pointer'
-                  />
-                </div>
-
-                <div className='space-y-1'>
-                  <div className='flex justify-between text-xs font-bold text-gray-700'>
-                    <span>Daily Workout Duration</span>
-                    <span className='font-mono text-[#FF2625]'>{workoutMinutes} mins</span>
-                  </div>
-                  <input
-                    type='range'
-                    min='0'
-                    max='180'
-                    step='15'
-                    value={workoutMinutes}
-                    onChange={(e) => setWorkoutMinutes(Number(e.target.value))}
-                    className='w-full accent-[#FF2625] cursor-pointer'
-                  />
-                </div>
-
-                <div>
-                  <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Climate / Ambient Heat</label>
-                  <div className='grid grid-cols-3 gap-2'>
-                    {[
-                      { id: 'temperate', label: '🌤️ Moderate' },
-                      { id: 'hot', label: '☀️ Hot / Dry' },
-                      { id: 'humid', label: '🌴 Humid / Trop' },
-                    ].map((c) => (
-                      <button
-                        key={c.id}
-                        type='button'
-                        onClick={() => setClimate(c.id as any)}
-                        className={`py-2 px-2 rounded-md text-xs font-bold border transition-colors cursor-pointer text-center ${
-                          climate === c.id ? 'bg-sky-50 border-sky-500 text-sky-700' : 'bg-white border-gray-200 text-gray-600'
-                        }`}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Water Result Display */}
-              <div className='lg:col-span-7 bg-linear-to-b from-sky-950 via-gray-900 to-gray-950 rounded-xl p-6 text-white border border-sky-900/50 shadow-lg space-y-5'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-xs font-bold uppercase tracking-wider text-sky-400'>Recommended Total Intake</span>
-                  <span className='px-2.5 py-0.5 rounded-sm text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30'>
-                    ~{hydrationResult.glasses} Standard Glasses (250ml)
-                  </span>
-                </div>
-
-                <div className='text-center py-2'>
-                  <span className='text-5xl font-black font-mono tracking-tight text-white'>{hydrationResult.totalMl}</span>
-                  <span className='block text-xs text-sky-300 font-bold uppercase tracking-wider mt-1'>
-                    Milliliters / Day ({hydrationResult.totalOz} oz)
-                  </span>
-                </div>
-
-                {/* Timing Schedule */}
-                <div className='space-y-2 pt-2 border-t border-white/10'>
-                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400 block'>
-                    Optimal Hydration Timing Protocol
-                  </span>
-                  <div className='space-y-2 text-xs'>
-                    {hydrationResult.schedule.map((item, idx) => (
-                      <div key={idx} className='p-2.5 bg-white/5 rounded-md border border-white/10 flex items-center justify-between gap-3'>
-                        <div>
-                          <strong className='text-white block font-bold'>{item.time}</strong>
-                          <span className='text-[11px] text-gray-400'>{item.desc}</span>
-                        </div>
-                        <span className='font-mono font-bold text-sky-400 shrink-0'>{item.amount}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ==================================================== */}
-        {/* TAB 6: BMR CALCULATOR (MULTI-FORMULA ENGINE) */}
+        {/* TAB 7: BMR CALCULATOR (MULTI-FORMULA ENGINE) */}
         {/* ==================================================== */}
         {activeTab === 'bmr' && (
           <div className='space-y-6'>
@@ -2049,7 +2324,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 7: IDEAL WEIGHT (5-FORMULA COMPARISON ARRAY) */}
+        {/* TAB 8: IDEAL WEIGHT */}
         {/* ==================================================== */}
         {activeTab === 'idealweight' && (
           <div className='space-y-6'>
@@ -2162,7 +2437,267 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 8: CARDIO & RUNNING PACE CALCULATOR */}
+        {/* TAB 9: 1RM (ONE REP MAX) & STRENGTH LOAD MATRIX */}
+        {/* ==================================================== */}
+        {activeTab === 'onerm' && (
+          <div className='space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
+              <div>
+                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
+                  <Dumbbell className='w-6 h-6 text-[#FF2625]' />
+                  One-Rep Max (1RM) & Strength Load Matrix
+                </h2>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Clinical Brzycki, Epley & Lombardi formulas predicting maximal lifting output and percentage loads.
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() =>
+                  handleCopySummary(
+                    `Estimated 1RM (${selectedLift}): ${oneRmResult.avg1RM}${unitSystem === 'metric' ? 'kg' : 'lbs'} based on ${liftWeight} x ${liftReps} reps`
+                  )
+                }
+                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
+              >
+                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
+              </button>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+              {/* Lift Controls */}
+              <div className='lg:col-span-5 space-y-5'>
+                <div>
+                  <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Barbell Movement</label>
+                  <div className='grid grid-cols-2 gap-2'>
+                    {[
+                      { id: 'bench', name: 'Bench Press' },
+                      { id: 'squat', name: 'Back Squat' },
+                      { id: 'deadlift', name: 'Deadlift' },
+                      { id: 'ohp', name: 'Overhead Press' },
+                    ].map((lift) => (
+                      <button
+                        key={lift.id}
+                        type='button'
+                        onClick={() => setSelectedLift(lift.id as any)}
+                        className={`py-2 px-3 rounded-md text-xs font-bold border transition-colors cursor-pointer text-center ${
+                          selectedLift === lift.id
+                            ? 'bg-[#FF2625] text-white border-[#FF2625]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {lift.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className='space-y-1.5'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Lifted Weight</span>
+                    <span className='font-mono text-[#FF2625]'>
+                      {liftWeight} {unitSystem === 'metric' ? 'kg' : 'lbs'}
+                    </span>
+                  </div>
+                  <input
+                    type='range'
+                    min='20'
+                    max='350'
+                    value={liftWeight}
+                    onChange={(e) => setLiftWeight(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                <div className='space-y-1.5'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Repetitions Completed</span>
+                    <span className='font-mono text-[#FF2625]'>{liftReps} reps</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='1'
+                    max='12'
+                    value={liftReps}
+                    onChange={(e) => setLiftReps(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                {/* 1RM Hero Card */}
+                <div className='p-4 rounded-xl bg-linear-to-br from-gray-950 to-gray-900 text-white border border-gray-800 text-center space-y-1'>
+                  <span className='text-[10px] uppercase font-bold tracking-widest text-red-400'>
+                    Predicted Absolute 1RM
+                  </span>
+                  <div className='text-4xl font-black font-mono text-white'>
+                    {oneRmResult.avg1RM}{' '}
+                    <span className='text-base font-bold text-gray-400'>{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                  </div>
+                  <div className='flex justify-center gap-3 text-[11px] text-gray-400 pt-1'>
+                    <span>Epley: {oneRmResult.epley}</span>
+                    <span>•</span>
+                    <span>Brzycki: {oneRmResult.brzycki}</span>
+                    <span>•</span>
+                    <span>Lombardi: {oneRmResult.lombardi}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Percentage Loading Matrix Table */}
+              <div className='lg:col-span-7 bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-3'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-700'>Training Load Matrix</span>
+                  <span className='text-[11px] text-gray-500 font-medium'>Recommended Reps & Target Zones</span>
+                </div>
+
+                <div className='divide-y divide-gray-200 text-xs'>
+                  {oneRmResult.percentages.map((row) => (
+                    <div key={row.pct} className='py-2 flex items-center justify-between gap-2 hover:bg-gray-100/60 px-1 rounded transition-colors'>
+                      <div className='flex items-center gap-2'>
+                        <span className='w-12 font-black text-gray-900 font-mono'>{row.pct}%</span>
+                        <div>
+                          <span className='font-bold text-gray-800 block'>{row.reps}</span>
+                          <span className='text-[10px] text-gray-400'>{row.goal}</span>
+                        </div>
+                      </div>
+                      <div className='text-right'>
+                        <span className='font-black font-mono text-sm text-[#FF2625]'>
+                          {row.weight} {unitSystem === 'metric' ? 'kg' : 'lbs'}
+                        </span>
+                        <span className='block text-[10px] text-gray-400'>RPE {row.rpe}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 10: DAILY HYDRATION */}
+        {/* ==================================================== */}
+        {activeTab === 'hydration' && (
+          <div className='space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
+              <div>
+                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
+                  <Droplets className='w-6 h-6 text-sky-500' />
+                  Daily Hydration & Fluid Optimization
+                </h2>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Calculates cellular water requirements based on body mass, sweat rate, workout intensity, and climate.
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() =>
+                  handleCopySummary(
+                    `Daily Water Target: ${hydrationResult.totalMl}ml (${hydrationResult.glasses} glasses) | Sweating: +${workoutMinutes}m workout`
+                  )
+                }
+                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
+              >
+                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
+              </button>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+              <div className='lg:col-span-5 space-y-4'>
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Body Weight</span>
+                    <span className='font-mono text-[#FF2625]'>{hydrationWeightKg} kg</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='40'
+                    max='160'
+                    value={hydrationWeightKg}
+                    onChange={(e) => setHydrationWeightKg(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Daily Workout Duration</span>
+                    <span className='font-mono text-[#FF2625]'>{workoutMinutes} mins</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='0'
+                    max='180'
+                    step='15'
+                    value={workoutMinutes}
+                    onChange={(e) => setWorkoutMinutes(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Climate / Ambient Heat</label>
+                  <div className='grid grid-cols-3 gap-2'>
+                    {[
+                      { id: 'temperate', label: '🌤️ Moderate' },
+                      { id: 'hot', label: '☀️ Hot / Dry' },
+                      { id: 'humid', label: '🌴 Humid / Trop' },
+                    ].map((c) => (
+                      <button
+                        key={c.id}
+                        type='button'
+                        onClick={() => setClimate(c.id as any)}
+                        className={`py-2 px-2 rounded-md text-xs font-bold border transition-colors cursor-pointer text-center ${
+                          climate === c.id ? 'bg-sky-50 border-sky-500 text-sky-700' : 'bg-white border-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Water Result Display */}
+              <div className='lg:col-span-7 bg-linear-to-b from-sky-950 via-gray-900 to-gray-950 rounded-xl p-6 text-white border border-sky-900/50 shadow-lg space-y-5'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-sky-400'>Recommended Total Intake</span>
+                  <span className='px-2.5 py-0.5 rounded-sm text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30'>
+                    ~{hydrationResult.glasses} Standard Glasses (250ml)
+                  </span>
+                </div>
+
+                <div className='text-center py-2'>
+                  <span className='text-5xl font-black font-mono tracking-tight text-white'>{hydrationResult.totalMl}</span>
+                  <span className='block text-xs text-sky-300 font-bold uppercase tracking-wider mt-1'>
+                    Milliliters / Day ({hydrationResult.totalOz} oz)
+                  </span>
+                </div>
+
+                {/* Timing Schedule */}
+                <div className='space-y-2 pt-2 border-t border-white/10'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400 block'>
+                    Optimal Hydration Timing Protocol
+                  </span>
+                  <div className='space-y-2 text-xs'>
+                    {hydrationResult.schedule.map((item, idx) => (
+                      <div key={idx} className='p-2.5 bg-white/5 rounded-md border border-white/10 flex items-center justify-between gap-3'>
+                        <div>
+                          <strong className='text-white block font-bold'>{item.time}</strong>
+                          <span className='text-[11px] text-gray-400'>{item.desc}</span>
+                        </div>
+                        <span className='font-mono font-bold text-sky-400 shrink-0'>{item.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 11: CARDIO & PACE CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'pace' && (
           <div className='space-y-6'>
@@ -2314,7 +2849,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 9: PREGNANCY TRACKER */}
+        {/* TAB 12: PREGNANCY TRACKER */}
         {/* ==================================================== */}
         {activeTab === 'pregnancy' && (
           <div className='space-y-6'>
@@ -2415,7 +2950,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 10: CONCEPTION DATE CALCULATOR */}
+        {/* TAB 13: CONCEPTION DATE CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'conception' && (
           <div className='space-y-6'>
@@ -2458,7 +2993,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 11: DUE DATE (EDD) CALCULATOR */}
+        {/* TAB 14: DUE DATE (EDD) CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'duedate' && (
           <div className='space-y-6'>
