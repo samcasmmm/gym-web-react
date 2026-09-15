@@ -1,73 +1,72 @@
+# IronTrack — Gym Tracker & Exercise Platform
 
-![image](https://user-images.githubusercontent.com/87710112/198897496-31b46cbd-97a5-431e-ae58-b2d922e21be7.png)
+A modern, high-performance **Gym & Workout Tracker** built with **React 19, Vite, TypeScript, Tailwind CSS v4, Dexie (IndexedDB), Recharts, and TanStack Query**.
 
-# Getting Started with Create React App
+---
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Key Features
 
-## Available Scripts
+1. **Dashboard & Hub (`/`)**:
+   - Hero status, weekly workouts counter, total volume lifted, latest weigh-in, and recent PRs showcase.
+   - Interactive training split quick launchers (Push, Pull, Legs, Upper).
+   - Recharts weekly volume progression bar chart.
+   - Live 1,500+ exercise directory powered by open-source ExerciseDB API.
 
-In the project directory, you can run:
+2. **Active Workout Logger (`/workout`)**:
+   - Live workout timer, set tables, and automatic previous weight/reps comparison.
+   - **Progressive Overload Advisor**: Suggests weight and rep targets based on previous performance.
+   - **Built-in Rest Timer**: Visual circular countdown (30s, 60s, 90s, 120s, 180s) with audio cues and floating widget.
+   - **1RM Calculator**: Instant Epley formula estimation per set.
+   - **PR Detection & Celebration**: Automatic detection of new Personal Records with celebratory confetti.
 
-### `npm start`
+3. **Exercise Library (`/exercises`)**:
+   - 1,500+ animated gym exercises with body part, muscle target, and equipment filters.
+   - Step-by-step form cues and instructions.
+   - Custom exercise creator with instant IndexedDB persistence.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4. **Workout History (`/history`)**:
+   - Historical workout sessions with total volume, duration, and exercise set breakdowns.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+5. **Progress & Analytics (`/progress`)**:
+   - Body weight trend line chart (Recharts).
+   - Exercise strength progression tracking (max weight lifted over time).
+   - Personal Record (PR) trophy wall.
+   - Body measurement logger (Weight, Chest, Waist, Arms).
 
-### `npm test`
+6. **Training Plans & Routines (`/plans`)**:
+   - Preset templates: Push/Pull/Legs (PPL), Upper/Lower, Full Body, Arnold Split.
+   - 1-click routine launcher directly into the active tracker.
+   - Custom routine creator.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+7. **Settings & Offline Data Management (`/settings`)**:
+   - Unit toggle (`kg` vs `lbs`).
+   - JSON data backup export & restore.
+   - Reset or reload sample workout history.
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Tech Stack
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Framework**: React 19 + Vite 8
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **Database**: IndexedDB via Dexie.js (100% offline-first)
+- **Data Fetching**: TanStack Query v5 + Axios
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **Package Manager**: Bun
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+# Install dependencies
+bun install
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Start development server (http://localhost:3000)
+bun run dev
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# Build production bundle
+bun run build
+```
