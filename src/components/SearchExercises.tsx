@@ -1,108 +1,96 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
-import { exerciseOptions, fetchData } from '../utils/fetchData';
-import '../App.css';
-import HorizontalScrollbar from '../components/HorizontalScollbar';
+import React, { useState } from 'react';
+import { Search } from 'lucide-react';
+import { useBodyParts } from '../hooks/useExercises';
+import HorizontalScrollbar from './HorizontalScollbar';
+import Loader from './Loader';
 
-const SearchExercise = ({ setExercises, bodyPart, setBodyPart }) => {
-  const [search, setSearch] = useState('');
-  const [bodyParts, setBodyParts] = useState([]);
-  const [isBodyPart, setIsBodyPart] = useState(true);
+interface SearchExercisesProps {
+  bodyPart: string;
+  setBodyPart: (bodyPart: string) => void;
+  onSearch: (searchTerm: string) => void;
+}
 
-  useEffect(() => {
-    const fetchExercisesData = async () => {
-      const bodyPartsData = await fetchData(
-        'https://exercisedb.p.rapidapi.com/exercises/bodyPartList',
-        exerciseOptions
-      );
+const SearchExercises: React.FC<SearchExercisesProps> = ({
+  bodyPart,
+  setBodyPart,
+  onSearch,
+}) => {
+  const [searchInput, setSearchInput] = useState('');
+  const { data: bodyParts = ['all'], isLoading } = useBodyParts();
 
-      setBodyParts(['all', ...bodyPartsData]);
-    };
-    fetchExercisesData();
-  }, []);
-
-  const handleSearch = async () => {
-    if (search) {
-      // https://exercisedb.p.rapidapi.com/exercises
-
-      const exercisesData = await fetchData(
-        'https://exercisedb.p.rapidapi.com/exercises',
-        exerciseOptions
-      );
-
-      console.log(exercisesData);
-
-      const searchExercises = exercisesData.filter(
-        (exercise) =>
-          exercise.name.toLowerCase().includes(search) ||
-          exercise.target.toLowerCase().includes(search) ||
-          exercise.equipment.toLowerCase().includes(search) ||
-          exercise.bodyPart.toLowerCase().includes(search)
-      );
-
-      setSearch('');
-      setExercises(searchExercises);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      onSearch(searchInput.trim());
+      const exercisesElem = document.getElementById('exercises');
+      if (exercisesElem) {
+        exercisesElem.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
-  return (
-    <Stack alignItems='center' mt='37px' justifyContent='center' p='20px'>
-      <Typography
-        fontWeight={700}
-        sx={{
-          fontSize: { lg: '44px', xs: '30px' },
-          // marginTop :{lg : "0px", sm}
-        }}
-        mb='50px'
-        // mt="130px"
-        textAlign='center'
-      >
-        Awesome Exercise You <br />
-        Should Know
-      </Typography>
-      <Box position='relative' mb='72px'>
-        <TextField
-          sx={{
-            input: { fontWeight: '700', border: 'none', borderRadius: '4px' },
-            width: { lg: '800px', xs: '350px' },
-            backgroundColor: '#fff',
-            borderRadius: '40px',
-          }}
-          height='76px'
-          value={search}
-          onChange={(e) => setSearch(e.target.value.toLowerCase())}
-          placeholder='Search Exercises'
-          type='text'
-        />
+  const handleClear = () => {
+    setSearchInput('');
+    onSearch('');
+  };
 
-        <Button
-          className='search-btn'
-          sx={{
-            bgcolor: '#FF2625',
-            color: '#fff',
-            textTransform: 'none',
-            width: { lg: '175px', xs: '80px' },
-            fontSize: { lg: '20px', xs: '14px' },
-            height: '56px',
-            position: 'absolute',
-            right: 0,
-            marginLeft: '10px',
-          }}
-          onClick={handleSearch}
+  return (
+    <section className="flex flex-col items-center justify-center mt-10 p-5 w-full">
+      <h2 className="font-bold text-3xl sm:text-4xl lg:text-5xl text-center text-gray-900 mb-12 leading-snug">
+        Awesome Exercises You <br /> Should Know
+      </h2>
+
+      {/* Search Input Bar */}
+      <form
+        onSubmit={handleSearchSubmit}
+        className="relative flex items-center w-full max-w-3xl mb-12 shadow-md rounded-full overflow-hidden bg-white border border-gray-200 focus-within:ring-2 focus-within:ring-[#FF2625]/50 transition-all"
+      >
+        <div className="pl-6 text-gray-400">
+          <Search className="w-6 h-6" />
+        </div>
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search Exercises by name, muscle, or equipment..."
+          className="w-full py-4 px-4 text-gray-800 placeholder-gray-400 font-semibold focus:outline-none text-base sm:text-lg bg-transparent"
+        />
+        {searchInput && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="px-3 text-gray-400 hover:text-gray-600 font-semibold text-sm cursor-pointer"
+          >
+            Clear
+          </button>
+        )}
+        <button
+          type="submit"
+          className="bg-[#FF2625] hover:bg-[#e0201f] text-white font-semibold text-base sm:text-lg px-6 sm:px-10 py-4 transition-colors cursor-pointer shrink-0"
         >
           Search
-        </Button>
-      </Box>
-      <Box sx={{ position: 'relative', width: '100%', p: '20px' }}>
-        <HorizontalScrollbar
-          data={bodyParts}
-          bodyPart={bodyPart}
-          setBodyPart={setBodyPart}
-          isBodyPart={isBodyPart}
-        />
-      </Box>
-    </Stack>
+        </button>
+      </form>
+
+      {/* Body Part Categories */}
+      <div className="relative w-full px-2 sm:px-6">
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <HorizontalScrollbar
+            data={bodyParts}
+            bodyPart={bodyPart}
+            setBodyPart={(selected) => {
+              setBodyPart(selected);
+              setSearchInput('');
+              onSearch('');
+            }}
+            isBodyPart
+          />
+        )}
+      </div>
+    </section>
   );
 };
 
-export default SearchExercise;
+export default SearchExercises;

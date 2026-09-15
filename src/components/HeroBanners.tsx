@@ -1,36 +1,40 @@
 import React from 'react';
-import {Box, Stack, Typography, Button} from '@mui/material';
 import bannerImg from '../assets/images/banner.png';
 
-const HeroBanners = () => {
+const HeroBanners: React.FC = () => {
   return (
-    <Box sx={{
-      mt:{lg:"212px", xs:'70px'},
-      ml:{sm:'50px'}
-    }}position='relative' p="20px">
-      <Typography color="#FF2625"
-      fontWeight={600} fontSize="25px">
-        Fitness Club
-      </Typography>
-      <Typography fontWeight='700'
-      sx={{fontSize:{lg:'44px',xs:'40px'}}}mb="23px" mt="30px">
-        Sweat, Smile <br/> and Repeat
-      </Typography>
-      <Typography fontSize='22px'
-      lineHeight="35px" mb={4}>
-        Check out the most effictive exercise
-      </Typography>
-      <Button variant='contained' color='error' href='#exercises' sx={{ backgroundColor:'#FF2625', padding:'10px'}}>Explore Exercise</Button>
-      <Typography fontWeight={600}
-      color='#ff2625' 
-      sx={{
-        opacity:0.1,
-        display:{lg:'block', xs:'none'}
-      }}
-      fontSize="200px">Exercise</Typography>
-      <img src={bannerImg} alt="Banner Image" className='hero-banner-img' />
-    </Box>
-  )
-}
+    <section className='relative mt-16 sm:mt-24 lg:mt-32 p-5 sm:ml-12'>
+      <p className='text-[#FF2625] font-semibold text-2xl sm:text-3xl tracking-wide'>Fitness Club</p>
 
-export default HeroBanners
+      <h1 className='font-bold text-4xl sm:text-5xl lg:text-[44px] text-gray-900 mt-6 mb-5 leading-tight'>
+        Sweat, Smile <br /> and Repeat
+      </h1>
+
+      <p className='text-xl sm:text-2xl text-gray-600 leading-9 mb-8 max-w-lg'>
+        Check out the most effective exercises tailored for your strength and health goals.
+      </p>
+
+      <a
+        href='#exercises'
+        className='inline-block bg-[#FF2625] hover:bg-[#e0201f] text-white font-semibold text-lg px-8 py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer'
+      >
+        Explore Exercises
+      </a>
+
+      <span
+        aria-hidden='true'
+        className='hidden lg:block font-bold text-[#FF2625] opacity-10 text-[180px] select-none pointer-events-none -mt-10 tracking-widest'
+      >
+        Exercise
+      </span>
+
+      <img
+        src={bannerImg}
+        alt='Gym Banner'
+        className='hidden lg:block absolute right-8 top-0 w-150 xl:w-175 -mt-52 object-contain select-none pointer-events-none drop-shadow-xl'
+      />
+    </section>
+  );
+};
+
+export default HeroBanners;

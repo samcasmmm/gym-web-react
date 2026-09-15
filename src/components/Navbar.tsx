@@ -1,48 +1,37 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Stack } from "@mui/material";
-import Logo from "../assets/images/Logo.png";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import Logo from '../assets/images/Logo.png';
 
-const Navbar = () => {
+const Navbar: React.FC = () => {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
   return (
-    <>
-      <Stack
-        direction="row"
-        justifyContent="space-around"
-        sx={{
-          gap: { sm: "122px", xs: "40px" },
-          mt: { sm: "32px", xs: "20px" },
-          justifyContent: "none",
-        }}
-        px="20px"
-      >
-        <Link to="/">
-          <img
-            src={Logo}
-            alt="Logo"
-            style={{ width: "48px", height: "48px", margin: "0 20px" }}
-          />
+    <header className="flex flex-row items-center gap-10 sm:gap-28 mt-5 sm:mt-8 px-5 py-2">
+      <Link to="/" className="shrink-0 transition-transform hover:scale-105">
+        <img
+          src={Logo}
+          alt="Golds Gym Logo"
+          className="w-12 h-12 object-contain"
+        />
+      </Link>
+      <nav className="flex flex-row items-end gap-10 text-2xl font-medium">
+        <Link
+          to="/"
+          className={`transition-colors text-[#3A1212] ${
+            isHome ? 'border-b-4 border-[#FF2625] font-semibold' : 'hover:text-[#FF2625]'
+          }`}
+        >
+          Home
         </Link>
-        <Stack direction="row" gap="40px" fontSize="24px" alignItems="flex-end">
-          <Link
-            to="/"
-            style={{
-              textDecoration: "none",
-              color: "#3A1212",
-              borderBottom: "3px solid #FF2625",
-            }}
-          >
-            Home
-          </Link>
-          <a
-            href="#exercises"
-            style={{ textDecoration: "none", color: "#3a1212" }}
-          >
-            Exercises
-          </a>
-        </Stack>
-      </Stack>
-    </>
+        <a
+          href="/#exercises"
+          className="text-[#3A1212] hover:text-[#FF2625] transition-colors"
+        >
+          Exercises
+        </a>
+      </nav>
+    </header>
   );
 };
 

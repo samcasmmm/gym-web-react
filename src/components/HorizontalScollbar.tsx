@@ -1,54 +1,78 @@
-import React, { useContext } from "react";
-import { Box, Typography } from "@mui/material";
-import { ScrollMenu, VisibilityContext } from "react-horizontal-scrolling-menu";
-import BodyPart from "./BodyPart";
-import LeftArrowIcon from "../assets/icons/left-arrow.png";
-import RightArrowIcon from "../assets/icons/right-arrow.png";
-import "../App.css";
-import ExerciseCard from "./ExerciseCard";
+import React, { useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import BodyPart from './BodyPart';
+import ExerciseCard from './ExerciseCard';
+import { Exercise } from '../api/exerciseApi';
 
-const LeftArrow = () => {
-  const { scrollPrev } = useContext(VisibilityContext);
+interface HorizontalScrollbarProps {
+  data: any[];
+  bodyPart?: string;
+  setBodyPart?: (bodyPart: string) => void;
+  isBodyPart?: boolean;
+}
+
+const HorizontalScrollbar: React.FC<HorizontalScrollbarProps> = ({
+  data,
+  bodyPart = '',
+  setBodyPart = () => {},
+  isBodyPart = false,
+}) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, clientWidth } = scrollContainerRef.current;
+      const scrollAmount = clientWidth * 0.75;
+      scrollContainerRef.current.scrollTo({
+        left: direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   return (
-    <Typography mt='5px' mb='5px' onClick={() => scrollPrev()} className="right-arrow">
-      <img src={LeftArrowIcon} alt="right-arrow" />
-    </Typography>
-  );
-};
+    <div className="relative w-full group py-4">
+      {/* Scrollable Container */}
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-row overflow-x-auto gap-6 no-scrollbar scroll-smooth py-2 px-1"
+      >
+        {data.map((item, index) => (
+          <div key={item.id || item.exerciseId || item || index} className="shrink-0">
+            {isBodyPart ? (
+              <BodyPart
+                item={typeof item === 'string' ? item : item.name}
+                bodyPart={bodyPart}
+                setBodyPart={setBodyPart}
+              />
+            ) : (
+              <ExerciseCard exercise={item as Exercise} />
+            )}
+          </div>
+        ))}
+      </div>
 
-const RightArrow = () => {
-  const { scrollNext } = useContext(VisibilityContext);
-  return (
-    <Typography mt='5px' mb='5px' onClick={() => scrollNext()} className="left-arrow">
-      <img src={RightArrowIcon} alt="right-arrow" />
-    </Typography>
-  );
-};
-
-const HorizontalScollbar = ({ data, bodyPart, setBodyPart, isBodyPart }) => {
-  return (
-    <ScrollMenu LeftArrow={LeftArrow} RightArrow={RightArrow}>
-      {data.map((item) => (
-        <Box
-          key={item.id || item}
-          itemID={item.id || item}
-          title={item.id || item}
-          m="0 40px"
+      {/* Navigation Arrows */}
+      <div className="flex justify-end gap-4 mt-4 pr-4">
+        <button
+          type="button"
+          onClick={() => scroll('left')}
+          aria-label="Scroll left"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-md hover:shadow-lg hover:bg-[#FF2625] text-[#FF2625] hover:text-white border border-gray-100 transition-all duration-200 cursor-pointer"
         >
-          {isBodyPart ? (
-            <BodyPart
-              item={item}
-              bodyPart={bodyPart}
-              setBodyPart={setBodyPart}
-            />
-          ) : (
-            <ExerciseCard exercise={item} />
-          )}
-        </Box>
-      ))}
-    </ScrollMenu>
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scroll('right')}
+          aria-label="Scroll right"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-md hover:shadow-lg hover:bg-[#FF2625] text-[#FF2625] hover:text-white border border-gray-100 transition-all duration-200 cursor-pointer"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+    </div>
   );
 };
 
-export default HorizontalScollbar;
+export default HorizontalScrollbar;

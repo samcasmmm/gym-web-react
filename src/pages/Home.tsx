@@ -1,27 +1,25 @@
-import React, { useState } from "react";
-import { Box } from "@mui/material";
-import HeroBanners from "../components/HeroBanners";
-import SearchExercises from "../components/SearchExercises";
-import Exercises from "../components/Exercises";
+import React, { useState } from 'react';
+import HeroBanners from '../components/HeroBanners';
+import SearchExercises from '../components/SearchExercises';
+import Exercises from '../components/Exercises';
 
-const Home = () => {
+const Home: React.FC = () => {
   const [bodyPart, setBodyPart] = useState('all');
-  const [exercises, setExercises] = useState([]);
-  console.log(bodyPart);
+  const [search, setSearch] = useState('');
+
   return (
-    <Box>
+    <div className="w-full">
       <HeroBanners />
       <SearchExercises
-        setExercises={setExercises}
         bodyPart={bodyPart}
         setBodyPart={setBodyPart}
+        onSearch={setSearch}
       />
       <Exercises
-        exercises={exercises}
-        setExercises={setExercises}
         bodyPart={bodyPart}
+        search={search}
       />
-    </Box>
+    </div>
   );
 };
 

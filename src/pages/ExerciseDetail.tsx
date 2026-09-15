@@ -1,49 +1,76 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box } from '@mui/system';
-import { exerciseOptions, fetchData, youtubeOption } from '../utils/fetchData'
 import Detail from '../components/Detail';
 import ExercisesVideo from '../components/ExercisesVideo';
-import SimilairExercises from '../components/SimilairExercises';
+import SimilarExercises from '../components/SimilairExercises';
+import Loader from '../components/Loader';
+import {
+  useExerciseDetail,
+  useExerciseVideos,
+  useSimilarMuscleExercises,
+  useSimilarEquipmentExercises,
+} from '../hooks/useExercises';
 
-const ExerciseDetail = () => {
+const ExerciseDetail: React.FC = () => {
+  const { id = '' } = useParams<{ id: string }>();
 
-  const [exerciseDetail, setExerciseDetail] = useState({});
-  const [exerciseVideo, setExerciseVideo] = useState([]);
-  const [targetMuscleVideo, setTargetMuscleVideo] = useState([]);
-  const [equipmentVideo, setEquipmentVideo] = useState([]);
-  
-  const {id} = useParams();
-  
   useEffect(() => {
-    const fetchExercisesData = async () =>{
-        const exerciseDbUrl = 'https://exercisedb.p.rapidapi.com';
-        
-        const youtubeSearchUrl = 'https://youtube-search-and-download.p.rapidapi.com';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [id]);
 
-        
-        const exerciseDetailData = await fetchData(`${exerciseDbUrl}/exercises/exercise/${id}`,exerciseOptions);
-        setExerciseDetail(exerciseDetailData);
-        
-        const exerciseVideoData = await fetchData(`${youtubeSearchUrl}/search?query=${exerciseDetailData.name}`,youtubeOption);
-        setExerciseVideo(exerciseVideoData.contents);
-        
-        const targetMuscleExericses = await fetchData(` ${exerciseDbUrl}/exercises/target/${exerciseDetailData.target}`, exerciseOptions)
-        setTargetMuscleVideo(targetMuscleExericses);
+  const {
+    data: exerciseDetail,
+    isLoading: isDetailLoading,
+    isError: isDetailError,
+    error: detailError,
+  } = useExerciseDetail(id);
 
-        const equipmentExericses= await fetchData(` ${exerciseDbUrl}/exercises/equipment/${exerciseDetailData.equipment}`, exerciseOptions)
-        setEquipmentVideo(equipmentExericses);
-    }
-    fetchExercisesData();
-  }, [id])
-  
+  const { data: exerciseVideos = [], isLoading: isVideosLoading } = useExerciseVideos(
+    exerciseDetail?.name || ''
+  );
+
+  const { data: targetMuscleExercises = [], isLoading: isMusclesLoading } = useSimilarMuscleExercises(
+    exerciseDetail?.target || ''
+  );
+
+  const { data: equipmentExercises = [], isLoading: isEquipLoading } = useSimilarEquipmentExercises(
+    exerciseDetail?.equipment || ''
+  );
+
+  if (isDetailLoading) {
+    return <Loader />;
+  }
+
+  if (isDetailError || !exerciseDetail) {
+    return (
+      <div className="text-center py-20 bg-red-50 rounded-2xl p-8 my-10 border border-red-200">
+        <h2 className="text-2xl font-bold text-red-600 mb-2">Exercise Not Found</h2>
+        <p className="text-gray-600">{(detailError as Error)?.message || 'Unable to retrieve exercise details.'}</p>
+        <a
+          href="/"
+          className="inline-block mt-6 bg-[#FF2625] text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-[#e0201f] transition-colors"
+        >
+          Back to Home
+        </a>
+      </div>
+    );
+  }
+
   return (
-    <Box>
-      <Detail exerciseDetail={exerciseDetail}/>
-      <ExercisesVideo exerciseVideo={exerciseVideo} name={exerciseDetail.name}/>
-      <SimilairExercises targetMuscleVideo={targetMuscleVideo} equipmentExericses={equipmentVideo}/>
-    </Box>
-  )
-}
+    <div className="w-full">
+      <Detail exerciseDetail={exerciseDetail} />
+      <ExercisesVideo
+        exerciseVideo={exerciseVideos}
+        name={exerciseDetail.name}
+        isLoading={isVideosLoading}
+      />
+      <SimilarExercises
+        targetMuscleVideo={targetMuscleExercises}
+        equipmentExericses={equipmentExercises}
+        isLoading={isMusclesLoading || isEquipLoading}
+      />
+    </div>
+  );
+};
 
-export default ExerciseDetail
+export default ExerciseDetail;

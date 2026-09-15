@@ -1,34 +1,48 @@
 import React from 'react';
-import { Box, Stack, Typography } from '@mui/material';
-import HorizontalScollbar from './HorizontalScollbar';
+import HorizontalScrollbar from './HorizontalScollbar';
 import Loader from './Loader';
+import { Exercise } from '../api/exerciseApi';
 
-const SimilairExercises = ({ targetMuscleVideo, equipmentExericses }) => {
+interface SimilarExercisesProps {
+  targetMuscleVideo: Exercise[];
+  equipmentExericses: Exercise[];
+  isLoading?: boolean;
+}
+
+const SimilarExercises: React.FC<SimilarExercisesProps> = ({
+  targetMuscleVideo,
+  equipmentExericses,
+  isLoading,
+}) => {
   return (
-    <Box sx={{ mt: { lg: '100px', xs: '0' } }}>
-      <Typography variant='h3' mb={5}>
-        Exercises That Target The Same Muscle Group
-      </Typography>
-      <Stack direction='row' sx={{ p: '2', position: 'relative' }}>
-        {targetMuscleVideo.length ? (
-          <HorizontalScollbar data={targetMuscleVideo} />
-        ) : (
+    <section className="mt-16 sm:mt-24 p-5 flex flex-col gap-12">
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+          Exercises That Target The <span className="text-[#FF2625]">Same Muscle Group</span>
+        </h2>
+        {isLoading ? (
           <Loader />
+        ) : targetMuscleVideo && targetMuscleVideo.length > 0 ? (
+          <HorizontalScrollbar data={targetMuscleVideo} />
+        ) : (
+          <p className="text-gray-500 italic p-4">No similar muscle exercises found.</p>
         )}
-      </Stack>
+      </div>
 
-      <Typography variant='h3' mb={5}>
-        Exercises That Use The Same Equipment Group
-      </Typography>
-      <Stack direction='row' sx={{ p: '2', position: 'relative' }}>
-        {targetMuscleVideo.length ? (
-          <HorizontalScollbar data={equipmentExericses} />
-        ) : (
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+          Exercises That Use The <span className="text-[#FF2625]">Same Equipment</span>
+        </h2>
+        {isLoading ? (
           <Loader />
+        ) : equipmentExericses && equipmentExericses.length > 0 ? (
+          <HorizontalScrollbar data={equipmentExericses} />
+        ) : (
+          <p className="text-gray-500 italic p-4">No similar equipment exercises found.</p>
         )}
-      </Stack>
-    </Box>
+      </div>
+    </section>
   );
 };
 
-export default SimilairExercises;
+export default SimilarExercises;
