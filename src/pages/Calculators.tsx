@@ -874,124 +874,126 @@ const Calculators: React.FC = () => {
               </button>
             </div>
 
-            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch'>
               {/* Controls */}
-              <div className='lg:col-span-6 space-y-5'>
-                <div className='grid grid-cols-2 gap-3'>
-                  <div>
-                    <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Gender</label>
-                    <div className='flex gap-2'>
-                      <button
-                        type='button'
-                        onClick={() => setBmiGender('male')}
-                        className={`flex-1 py-2 rounded-md text-xs font-bold border cursor-pointer transition-colors ${
-                          bmiGender === 'male' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-200 text-gray-600'
-                        }`}
-                      >
-                        Male
-                      </button>
-                      <button
-                        type='button'
-                        onClick={() => setBmiGender('female')}
-                        className={`flex-1 py-2 rounded-md text-xs font-bold border cursor-pointer transition-colors ${
-                          bmiGender === 'female' ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-gray-200 text-gray-600'
-                        }`}
-                      >
-                        Female
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Age: {bmiAge} yrs</label>
-                    <input
-                      type='range'
-                      min='10'
-                      max='90'
-                      value={bmiAge}
-                      onChange={(e) => setBmiAge(Number(e.target.value))}
-                      className='w-full accent-[#FF2625] cursor-pointer'
-                    />
-                  </div>
-                </div>
-
-                {/* Height Selector */}
-                {unitSystem === 'metric' ? (
-                  <div className='space-y-1.5'>
-                    <div className='flex justify-between text-xs font-bold text-gray-700'>
-                      <span>Height</span>
-                      <span className='font-mono text-[#FF2625]'>{bmiHeightCm} cm</span>
-                    </div>
-                    <input
-                      type='range'
-                      min='120'
-                      max='220'
-                      value={bmiHeightCm}
-                      onChange={(e) => setBmiHeightCm(Number(e.target.value))}
-                      className='w-full accent-[#FF2625] cursor-pointer'
-                    />
-                  </div>
-                ) : (
+              <div className='lg:col-span-6 space-y-5 flex flex-col justify-between'>
+                <div className='space-y-5'>
                   <div className='grid grid-cols-2 gap-3'>
                     <div>
-                      <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Feet ({bmiHeightFt}')</label>
-                      <input
-                        type='range'
-                        min='4'
-                        max='7'
-                        value={bmiHeightFt}
-                        onChange={(e) => setBmiHeightFt(Number(e.target.value))}
-                        className='w-full accent-[#FF2625] cursor-pointer'
-                      />
+                      <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Gender</label>
+                      <div className='flex gap-2'>
+                        <button
+                          type='button'
+                          onClick={() => setBmiGender('male')}
+                          className={`flex-1 py-2 rounded-md text-xs font-bold border cursor-pointer transition-colors ${
+                            bmiGender === 'male' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          Male
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() => setBmiGender('female')}
+                          className={`flex-1 py-2 rounded-md text-xs font-bold border cursor-pointer transition-colors ${
+                            bmiGender === 'female' ? 'bg-pink-50 border-pink-300 text-pink-700' : 'bg-white border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          Female
+                        </button>
+                      </div>
                     </div>
                     <div>
-                      <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Inches ({bmiHeightIn}")</label>
+                      <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Age: {bmiAge} yrs</label>
                       <input
                         type='range'
-                        min='0'
-                        max='11'
-                        value={bmiHeightIn}
-                        onChange={(e) => setBmiHeightIn(Number(e.target.value))}
+                        min='10'
+                        max='90'
+                        value={bmiAge}
+                        onChange={(e) => setBmiAge(Number(e.target.value))}
                         className='w-full accent-[#FF2625] cursor-pointer'
                       />
                     </div>
                   </div>
-                )}
 
-                {/* Weight Selector */}
-                {unitSystem === 'metric' ? (
-                  <div className='space-y-1.5'>
-                    <div className='flex justify-between text-xs font-bold text-gray-700'>
-                      <span>Weight</span>
-                      <span className='font-mono text-[#FF2625]'>{bmiWeightKg} kg</span>
+                  {/* Height Selector */}
+                  {unitSystem === 'metric' ? (
+                    <div className='space-y-1.5'>
+                      <div className='flex justify-between text-xs font-bold text-gray-700'>
+                        <span>Height</span>
+                        <span className='font-mono text-[#FF2625]'>{bmiHeightCm} cm</span>
+                      </div>
+                      <input
+                        type='range'
+                        min='120'
+                        max='220'
+                        value={bmiHeightCm}
+                        onChange={(e) => setBmiHeightCm(Number(e.target.value))}
+                        className='w-full accent-[#FF2625] cursor-pointer'
+                      />
                     </div>
-                    <input
-                      type='range'
-                      min='35'
-                      max='180'
-                      value={bmiWeightKg}
-                      onChange={(e) => setBmiWeightKg(Number(e.target.value))}
-                      className='w-full accent-[#FF2625] cursor-pointer'
-                    />
-                  </div>
-                ) : (
-                  <div className='space-y-1.5'>
-                    <div className='flex justify-between text-xs font-bold text-gray-700'>
-                      <span>Weight</span>
-                      <span className='font-mono text-[#FF2625]'>{bmiWeightLbs} lbs</span>
+                  ) : (
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Feet ({bmiHeightFt}')</label>
+                        <input
+                          type='range'
+                          min='4'
+                          max='7'
+                          value={bmiHeightFt}
+                          onChange={(e) => setBmiHeightFt(Number(e.target.value))}
+                          className='w-full accent-[#FF2625] cursor-pointer'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-xs font-bold uppercase text-gray-500 mb-1'>Inches ({bmiHeightIn}")</label>
+                        <input
+                          type='range'
+                          min='0'
+                          max='11'
+                          value={bmiHeightIn}
+                          onChange={(e) => setBmiHeightIn(Number(e.target.value))}
+                          className='w-full accent-[#FF2625] cursor-pointer'
+                        />
+                      </div>
                     </div>
-                    <input
-                      type='range'
-                      min='80'
-                      max='400'
-                      value={bmiWeightLbs}
-                      onChange={(e) => setBmiWeightLbs(Number(e.target.value))}
-                      className='w-full accent-[#FF2625] cursor-pointer'
-                    />
-                  </div>
-                )}
+                  )}
+
+                  {/* Weight Selector */}
+                  {unitSystem === 'metric' ? (
+                    <div className='space-y-1.5'>
+                      <div className='flex justify-between text-xs font-bold text-gray-700'>
+                        <span>Weight</span>
+                        <span className='font-mono text-[#FF2625]'>{bmiWeightKg} kg</span>
+                      </div>
+                      <input
+                        type='range'
+                        min='35'
+                        max='180'
+                        value={bmiWeightKg}
+                        onChange={(e) => setBmiWeightKg(Number(e.target.value))}
+                        className='w-full accent-[#FF2625] cursor-pointer'
+                      />
+                    </div>
+                  ) : (
+                    <div className='space-y-1.5'>
+                      <div className='flex justify-between text-xs font-bold text-gray-700'>
+                        <span>Weight</span>
+                        <span className='font-mono text-[#FF2625]'>{bmiWeightLbs} lbs</span>
+                      </div>
+                      <input
+                        type='range'
+                        min='80'
+                        max='400'
+                        value={bmiWeightLbs}
+                        onChange={(e) => setBmiWeightLbs(Number(e.target.value))}
+                        className='w-full accent-[#FF2625] cursor-pointer'
+                      />
+                    </div>
+                  )}
+                </div>
 
                 {/* Quick Stepper Bar */}
-                <div className='p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-between text-xs text-gray-600'>
+                <div className='p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-between text-xs text-gray-600 mt-auto'>
                   <span className='font-semibold'>Fine-tune Weight:</span>
                   <div className='flex items-center gap-1.5'>
                     <button
@@ -1023,8 +1025,8 @@ const Calculators: React.FC = () => {
                 </div>
               </div>
 
-              {/* Visual Interactive Gauge Display */}
-              <div className='lg:col-span-6 bg-linear-to-b from-gray-900 to-gray-950 rounded-xl p-6 text-white border border-gray-800 shadow-lg space-y-5'>
+              {/* Visual Interactive Gauge Display - Height Locked & Fixed */}
+              <div className='lg:col-span-6 bg-linear-to-b from-gray-900 to-gray-950 rounded-xl p-6 text-white border border-gray-800 shadow-lg flex flex-col justify-between min-h-[485px] h-full'>
                 <div className='flex items-center justify-between'>
                   <span className='text-xs font-bold uppercase tracking-wider text-gray-400'>Live Biometric Readout</span>
                   <span className={`px-2.5 py-0.5 rounded-sm text-xs font-bold border ${bmiResult.color}`}>
@@ -1033,7 +1035,7 @@ const Calculators: React.FC = () => {
                 </div>
 
                 {/* SVG Gauge Graphic */}
-                <div className='relative flex flex-col items-center justify-center pt-2'>
+                <div className='relative flex flex-col items-center justify-center py-1'>
                   <svg className='w-64 h-36 overflow-visible' viewBox='0 0 240 135'>
                     <defs>
                       <linearGradient id='gaugeTrackGrad' x1='0%' y1='0%' x2='100%' y2='0%'>
@@ -1064,11 +1066,8 @@ const Calculators: React.FC = () => {
                     />
 
                     {/* Tick Markers */}
-                    {/* 18.5 Marker */}
                     <circle cx='43' cy='79' r='2' fill='#ffffff' opacity='0.7' />
-                    {/* 25.0 Marker */}
                     <circle cx='94' cy='34' r='2' fill='#ffffff' opacity='0.7' />
-                    {/* 30.0 Marker */}
                     <circle cx='146' cy='34' r='2' fill='#ffffff' opacity='0.7' />
 
                     {/* Animated Needle */}
@@ -1094,7 +1093,7 @@ const Calculators: React.FC = () => {
                     })()}
                   </svg>
 
-                  {/* Centered Readout Value with Clean Spacing (No Overlap) */}
+                  {/* Centered Readout Value */}
                   <div className='text-center mt-2'>
                     <span className='text-4xl font-black font-mono tracking-tight text-white'>{bmiResult.bmi}</span>
                     <span className='block text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5'>
@@ -1104,7 +1103,7 @@ const Calculators: React.FC = () => {
                 </div>
 
                 {/* Healthy Weight Envelope & Delta */}
-                <div className='grid grid-cols-2 gap-3 pt-2 text-xs'>
+                <div className='grid grid-cols-2 gap-3 text-xs'>
                   <div className='p-3 bg-white/5 rounded-lg border border-white/10'>
                     <span className='text-gray-400 font-medium block text-[11px]'>Healthy Weight Range</span>
                     <strong className='text-sm font-bold text-emerald-400'>
@@ -1119,27 +1118,43 @@ const Calculators: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Intuitive Target Weight & Delta Goal Card */}
+                {/* Target Weight & Delta Goal Card - Standardized Exact Height */}
                 {bmiResult.category === 'Normal Weight' ? (
-                  <div className='p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs flex items-center justify-between gap-3'>
-                    <div className='flex items-center gap-2.5'>
-                      <div className='w-7 h-7 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0'>
-                        <CheckCircle2 className='w-4 h-4' />
+                  <div className='min-h-[82px] p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs flex flex-col justify-between'>
+                    <div className='flex items-center justify-between gap-2'>
+                      <div className='flex items-center gap-2.5'>
+                        <div className='w-7 h-7 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-xs font-bold'>
+                          ✓
+                        </div>
+                        <div>
+                          <span className='font-bold text-emerald-300 block'>In Optimal Healthy Weight Zone</span>
+                          <span className='text-[11px] text-gray-300'>
+                            Your weight is within the healthy boundary ({bmiResult.minHealthyKg} – {bmiResult.maxHealthyKg}{' '}
+                            {unitSystem === 'metric' ? 'kg' : 'lbs'})
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <span className='font-bold text-emerald-300 block'>In Optimal Healthy Weight Zone</span>
-                        <span className='text-[11px] text-gray-400'>
-                          Your weight is within the healthy boundary ({bmiResult.minHealthyKg} – {bmiResult.maxHealthyKg}{' '}
-                          {unitSystem === 'metric' ? 'kg' : 'lbs'})
-                        </span>
+                      <div className='text-right shrink-0'>
+                        <span className='text-base font-black font-mono text-emerald-400'>0.0</span>
+                        <span className='text-[10px] text-gray-400 block uppercase font-bold'>{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
                       </div>
                     </div>
-                    <span className='px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs shrink-0'>
-                      ✓ Optimal
-                    </span>
+                    <div className='pt-1.5 flex items-center justify-between gap-2 text-[11px] text-gray-400 border-t border-white/10'>
+                      <span>Suggested Strategy:</span>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setActiveTab('calorie');
+                          setTargetGoal('maintain');
+                        }}
+                        className='text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer transition-colors'
+                      >
+                        Plan Maintenance Diet →
+                      </button>
+                    </div>
                   </div>
                 ) : bmiResult.category === 'Underweight' ? (
-                  <div className='p-3.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-xs space-y-2'>
+                  <div className='min-h-[82px] p-3 rounded-lg bg-sky-500/10 border border-sky-500/30 text-xs flex flex-col justify-between'>
                     <div className='flex items-center justify-between gap-2'>
                       <div className='flex items-center gap-2.5'>
                         <div className='w-7 h-7 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 text-xs font-bold'>
@@ -1172,7 +1187,7 @@ const Calculators: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className='p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs space-y-2'>
+                  <div className='min-h-[82px] p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs flex flex-col justify-between'>
                     <div className='flex items-center justify-between gap-2'>
                       <div className='flex items-center gap-2.5'>
                         <div className='w-7 h-7 rounded-md bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-xs font-bold'>
