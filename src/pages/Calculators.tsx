@@ -22,8 +22,8 @@ import {
   Beef,
   Hourglass,
   Layers,
-  Utensils,
-  Clock,
+  CalendarDays,
+  Target,
 } from 'lucide-react';
 
 export type CalculatorTab =
@@ -32,6 +32,7 @@ export type CalculatorTab =
   | 'protein'
   | 'fasting'
   | 'carbcycling'
+  | 'timeline'
   | 'bodyfat'
   | 'bmr'
   | 'idealweight'
@@ -67,6 +68,7 @@ const Calculators: React.FC = () => {
           setCalWeightKg(latest.weight);
           setProteinWeightKg(latest.weight);
           setCarbWeightKg(latest.weight);
+          setGoalCurrentWeightKg(latest.weight);
           setBfWeightKg(latest.weight);
           setBmrWeightKg(latest.weight);
           setHydrationWeightKg(latest.weight);
@@ -167,13 +169,11 @@ const Calculators: React.FC = () => {
 
     const targetCal = Math.max(1200, tdee + goalDelta);
 
-    // Energy distribution components
     const bmrPortion = Math.round(bmr);
     const tefPortion = Math.round(targetCal * 0.1);
     const neatPortion = Math.round((tdee - bmr) * 0.4);
     const eatPortion = Math.round((tdee - bmr) * 0.6);
 
-    // Macro Ratios
     let pRatio = 0.35;
     let cRatio = 0.40;
     let fRatio = 0.25;
@@ -228,14 +228,14 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 3. PROTEIN & LEUCINE INTAKE OPTIMIZER (NEW)
+  // 3. PROTEIN & LEUCINE INTAKE OPTIMIZER
   // ----------------------------------------------------
   const [proteinWeightKg, setProteinWeightKg] = useState<number>(76);
   const [proteinGoal, setProteinGoal] = useState<'maintain' | 'hypertrophy' | 'cutting' | 'endurance'>('hypertrophy');
   const [proteinMealsCount, setProteinMealsCount] = useState<number>(4);
 
   const calculateProtein = () => {
-    let multiplier = 2.0; // g/kg
+    let multiplier = 2.0;
     if (proteinGoal === 'maintain') multiplier = 1.4;
     if (proteinGoal === 'hypertrophy') multiplier = 2.0;
     if (proteinGoal === 'cutting') multiplier = 2.4;
@@ -244,9 +244,8 @@ const Calculators: React.FC = () => {
     const totalGrams = Math.round(proteinWeightKg * multiplier);
     const totalCals = totalGrams * 4;
     const perMealGrams = Math.round(totalGrams / proteinMealsCount);
-    const leucineGrams = Number((perMealGrams * 0.085).toFixed(1)); // ~8.5% leucine content
+    const leucineGrams = Number((perMealGrams * 0.085).toFixed(1));
 
-    // Food equivalents for 1 meal
     const chickenBreastG = Math.round((perMealGrams / 31) * 100);
     const wheyScoops = Number((perMealGrams / 25).toFixed(1));
     const wholeEggs = Math.round(perMealGrams / 6);
@@ -268,10 +267,10 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 4. INTERMITTENT FASTING & EATING WINDOW (NEW)
+  // 4. INTERMITTENT FASTING & EATING WINDOW
   // ----------------------------------------------------
   const [fastingProtocol, setFastingProtocol] = useState<'16_8' | '18_6' | '20_4' | '14_10' | '12_12'>('16_8');
-  const [firstMealHour, setFirstMealHour] = useState<number>(12); // 12:00 PM
+  const [firstMealHour, setFirstMealHour] = useState<number>(12);
 
   const calculateFasting = () => {
     let fastHours = 16;
@@ -320,31 +319,27 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 5. CARB CYCLING & GLYCOGEN REFEED PLANNER (NEW)
+  // 5. CARB CYCLING & GLYCOGEN REFEED PLANNER
   // ----------------------------------------------------
   const [carbWeightKg, setCarbWeightKg] = useState<number>(76);
   const [carbTdee, setCarbTdee] = useState<number>(2400);
 
   const calculateCarbCycling = () => {
-    // High Carb (Heavy Leg / Back training days) - TDEE + 10%
     const highCals = Math.round(carbTdee * 1.1);
     const highProteinG = Math.round(carbWeightKg * 2.0);
     const highFatG = Math.round(carbWeightKg * 0.6);
     const highCarbG = Math.round((highCals - highProteinG * 4 - highFatG * 9) / 4);
 
-    // Moderate Carb (Upper body / standard training days) - TDEE - 10%
     const modCals = Math.round(carbTdee * 0.9);
     const modProteinG = Math.round(carbWeightKg * 2.0);
     const modFatG = Math.round(carbWeightKg * 0.8);
     const modCarbG = Math.round((modCals - modProteinG * 4 - modFatG * 9) / 4);
 
-    // Low Carb / Rest Days - TDEE - 25%
     const lowCals = Math.round(carbTdee * 0.75);
     const lowProteinG = Math.round(carbWeightKg * 2.2);
     const lowFatG = Math.round(carbWeightKg * 1.0);
     const lowCarbG = Math.max(30, Math.round((lowCals - lowProteinG * 4 - lowFatG * 9) / 4));
 
-    // Weekly average on 2 High, 3 Moderate, 2 Low days
     const weeklyAvgCals = Math.round((highCals * 2 + modCals * 3 + lowCals * 2) / 7);
     const weeklyDeficit = Math.round((carbTdee - weeklyAvgCals) * 7);
 
@@ -367,7 +362,72 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 6. BODY FAT CALCULATOR (US NAVY STANDARD)
+  // 6. WEIGHT GOAL & TARGET DATE PREDICTOR (NEW - BALANCING ENGINE)
+  // ----------------------------------------------------
+  const [goalCurrentWeightKg, setGoalCurrentWeightKg] = useState<number>(80);
+  const [goalTargetWeightKg, setGoalTargetWeightKg] = useState<number>(72);
+  const [goalDailyDeficit, setGoalDailyDeficit] = useState<number>(500);
+
+  const calculateGoalTimeline = () => {
+    const deltaKg = Math.abs(goalCurrentWeightKg - goalTargetWeightKg);
+    const isLoss = goalCurrentWeightKg >= goalTargetWeightKg;
+    const totalKcalNeeded = Math.round(deltaKg * 7700);
+    const totalDays = Math.max(1, Math.round(totalKcalNeeded / Math.max(100, goalDailyDeficit)));
+    const totalWeeks = Number((totalDays / 7).toFixed(1));
+    const weeklyKgRate = Number(((goalDailyDeficit * 7) / 7700).toFixed(2));
+    const weeklyLbsRate = Number((weeklyKgRate * 2.20462).toFixed(2));
+
+    const targetDate = new Date(Date.now() + totalDays * 24 * 60 * 60 * 1000);
+    const targetDateStr = targetDate.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    const m25 = new Date(Date.now() + totalDays * 0.25 * 86400000).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+    const m50 = new Date(Date.now() + totalDays * 0.5 * 86400000).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+    const m75 = new Date(Date.now() + totalDays * 0.75 * 86400000).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+
+    let safeRating = 'Optimal & Sustainable Rate';
+    let safeColor = 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
+    if (goalDailyDeficit > 750) {
+      safeRating = 'Aggressive / Rapid Pace';
+      safeColor = 'text-amber-400 bg-amber-500/20 border-amber-500/30';
+    } else if (goalDailyDeficit < 350) {
+      safeRating = 'Gentle / Gradual Pace';
+      safeColor = 'text-sky-400 bg-sky-500/20 border-sky-500/30';
+    }
+
+    return {
+      deltaKg: Number(deltaKg.toFixed(1)),
+      deltaDisplay: Number((unitSystem === 'metric' ? deltaKg : deltaKg * 2.20462).toFixed(1)),
+      isLoss,
+      totalKcalNeeded,
+      totalDays,
+      totalWeeks,
+      weeklyKgRate,
+      weeklyLbsRate,
+      targetDateStr,
+      safeRating,
+      safeColor,
+      m25,
+      m50,
+      m75,
+    };
+  };
+
+  // ----------------------------------------------------
+  // 7. BODY FAT CALCULATOR (US NAVY STANDARD)
   // ----------------------------------------------------
   const [bfGender, setBfGender] = useState<'male' | 'female'>('male');
   const [bfHeightCm, setBfHeightCm] = useState<number>(178);
@@ -417,7 +477,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 7. BMR MULTI-FORMULA CALCULATOR
+  // 8. BMR MULTI-FORMULA CALCULATOR
   // ----------------------------------------------------
   const [bmrAge, setBmrAge] = useState<number>(25);
   const [bmrGender, setBmrGender] = useState<'male' | 'female'>('male');
@@ -453,7 +513,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 8. IDEAL WEIGHT CALCULATOR
+  // 9. IDEAL WEIGHT CALCULATOR
   // ----------------------------------------------------
   const [iwGender, setIwGender] = useState<'male' | 'female'>('male');
   const [iwHeightCm, setIwHeightCm] = useState<number>(178);
@@ -494,7 +554,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 9. ONE-REP MAX (1RM) & STRENGTH LOAD MATRIX
+  // 10. ONE-REP MAX (1RM) & STRENGTH LOAD MATRIX
   // ----------------------------------------------------
   const [liftWeight, setLiftWeight] = useState<number>(100);
   const [liftReps, setLiftReps] = useState<number>(5);
@@ -528,7 +588,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 10. HYDRATION & DAILY WATER INTAKE
+  // 11. HYDRATION & DAILY WATER INTAKE
   // ----------------------------------------------------
   const [hydrationWeightKg, setHydrationWeightKg] = useState<number>(75);
   const [workoutMinutes, setWorkoutMinutes] = useState<number>(60);
@@ -556,7 +616,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 11. CARDIO & PACE CALCULATOR
+  // 12. CARDIO & PACE CALCULATOR
   // ----------------------------------------------------
   const [paceDistKm, setPaceDistKm] = useState<number>(10);
   const [paceHours, setPaceHours] = useState<number>(0);
@@ -607,7 +667,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 12. PREGNANCY TRACKER
+  // 13. PREGNANCY TRACKER
   // ----------------------------------------------------
   const [lmpDate, setLmpDate] = useState<string>(() => {
     const d = new Date();
@@ -675,7 +735,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 13. CONCEPTION CALCULATOR
+  // 14. CONCEPTION CALCULATOR
   // ----------------------------------------------------
   const [conceptionLmpDate, setConceptionLmpDate] = useState<string>(() => {
     const d = new Date();
@@ -696,7 +756,7 @@ const Calculators: React.FC = () => {
   };
 
   // ----------------------------------------------------
-  // 14. DUE DATE CALCULATOR
+  // 15. DUE DATE CALCULATOR
   // ----------------------------------------------------
   const [dueDateLmp, setDueDateLmp] = useState<string>(() => {
     const d = new Date();
@@ -744,6 +804,7 @@ const Calculators: React.FC = () => {
   const proteinResult = calculateProtein();
   const fastingResult = calculateFasting();
   const carbCyclingResult = calculateCarbCycling();
+  const goalTimelineResult = calculateGoalTimeline();
   const bfResult = calculateBodyFat();
   const bmrResult = calculateBMRs();
   const iwResult = calculateIdealWeight();
@@ -754,7 +815,7 @@ const Calculators: React.FC = () => {
   const conceptionResult = calculateConception();
   const dueDateResult = calculateDueDate();
 
-  // Categorized Hub Configuration (14 Precision Engines)
+  // Categorized Hub Configuration (15 Precision Engines - 6/3/3/3 Balanced Grid)
   const categoryGroups: CategoryGroup[] = [
     {
       name: 'Nutrition & Energy Balance',
@@ -763,6 +824,7 @@ const Calculators: React.FC = () => {
         { id: 'protein', name: 'Protein Optimizer', icon: Beef, tag: 'MPS & Leucine', desc: 'Daily target, meal distribution & food portions' },
         { id: 'fasting', name: 'Intermittent Fasting', icon: Hourglass, tag: 'Autophagy Clock', desc: '16:8, 18:6 eating windows & metabolic timeline' },
         { id: 'carbcycling', name: 'Carb Cycling & Refeed', icon: Layers, tag: 'High/Mod/Low Split', desc: 'Training day fuel vs rest day fat oxidation' },
+        { id: 'timeline', name: 'Weight Goal Timeline', icon: Target, tag: 'Target Date & Deficit', desc: 'Projected completion date & required deficit' },
         { id: 'bmr', name: 'BMR Engine', icon: Zap, tag: 'Basal Multi-Formula', desc: 'Mifflin, Harris-Benedict & Katch-McArdle' },
       ],
     },
@@ -811,7 +873,6 @@ const Calculators: React.FC = () => {
     <div className='max-w-6xl mx-auto py-8 px-4 space-y-8 animate-in fade-in duration-300'>
       {/* 1. SUITE HERO & CONTROLS */}
       <div className='relative overflow-hidden bg-linear-to-br from-gray-950 via-gray-900 to-[#220707] text-white p-6 sm:p-8 rounded-xl border border-gray-800 shadow-2xl'>
-        {/* Subtle Ambient Glow */}
         <div className='absolute -right-20 -top-20 w-80 h-80 bg-[#FF2625]/15 rounded-full blur-3xl pointer-events-none' />
         <div className='absolute -left-20 -bottom-20 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none' />
 
@@ -819,7 +880,7 @@ const Calculators: React.FC = () => {
           <div className='space-y-2.5'>
             <div className='inline-flex items-center gap-2 px-3 py-1 rounded-md bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-wider'>
               <Sparkles className='w-3.5 h-3.5 text-[#FF2625]' />
-              14 Precision Clinical & Performance Engines
+              15 Precision Clinical & Performance Engines
             </div>
             <h1 className='text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3'>
               Calculators Hub
@@ -828,12 +889,11 @@ const Calculators: React.FC = () => {
               </span>
             </h1>
             <p className='text-gray-300 text-xs sm:text-sm max-w-2xl leading-relaxed'>
-              Science-backed algorithms with live dials, protein & leucine optimization, fasting clocks, carb cycling, race
-              split matrices, and instant IndexedDB synchronization.
+              Science-backed algorithms with live dials, protein & leucine optimization, fasting clocks, carb cycling, goal date timelines, race split matrices, and local IndexedDB profile synchronization.
             </p>
           </div>
 
-          {/* Quick Action Bar: Unit switcher & Profile Sync */}
+          {/* Quick Action Bar */}
           <div className='flex flex-wrap sm:flex-nowrap items-center gap-2.5 self-start lg:self-auto shrink-0'>
             <button
               type='button'
@@ -873,7 +933,7 @@ const Calculators: React.FC = () => {
           <div className='w-full sm:w-72'>
             <input
               type='text'
-              placeholder='Search calculators (e.g., Protein, Fasting, TDEE)...'
+              placeholder='Search calculators (e.g., Protein, Timeline, 1RM)...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className='w-full px-3.5 py-1.5 text-xs bg-white/10 border border-white/20 rounded-md text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF2625]'
@@ -890,6 +950,8 @@ const Calculators: React.FC = () => {
                 setCalHeightCm(180);
                 setProteinWeightKg(82);
                 setCarbWeightKg(82);
+                setGoalCurrentWeightKg(82);
+                setGoalTargetWeightKg(75);
                 setCalActivity(1.725);
                 setTargetGoal('cut500');
                 setMacroPreset('highprotein');
@@ -910,6 +972,8 @@ const Calculators: React.FC = () => {
                 setCalHeightCm(165);
                 setProteinWeightKg(58);
                 setCarbWeightKg(58);
+                setGoalCurrentWeightKg(58);
+                setGoalTargetWeightKg(55);
                 setCalActivity(1.55);
                 setTargetGoal('maintain');
                 setMacroPreset('balanced');
@@ -1264,7 +1328,7 @@ const Calculators: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Target Weight & Delta Goal Card - Standardized Exact Height */}
+                {/* Target Weight & Delta Goal Card */}
                 {bmiResult.category === 'Normal Weight' ? (
                   <div className='min-h-[82px] p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs flex flex-col justify-between'>
                     <div className='flex items-center justify-between gap-2'>
@@ -1608,7 +1672,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 3: PROTEIN & LEUCINE OPTIMIZER (NEW) */}
+        {/* TAB 3: PROTEIN & LEUCINE OPTIMIZER */}
         {/* ==================================================== */}
         {activeTab === 'protein' && (
           <div className='space-y-6'>
@@ -1750,7 +1814,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 4: INTERMITTENT FASTING & EATING WINDOW (NEW) */}
+        {/* TAB 4: INTERMITTENT FASTING & EATING WINDOW */}
         {/* ==================================================== */}
         {activeTab === 'fasting' && (
           <div className='space-y-6'>
@@ -1866,7 +1930,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 5: CARB CYCLING & REFEED PLANNER (NEW) */}
+        {/* TAB 5: CARB CYCLING & REFEED PLANNER */}
         {/* ==================================================== */}
         {activeTab === 'carbcycling' && (
           <div className='space-y-6'>
@@ -1997,7 +2061,161 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 6: BODY FAT % (US NAVY TAPE METHOD) */}
+        {/* TAB 6: WEIGHT GOAL TIMELINE & TARGET DATE PREDICTOR (NEW) */}
+        {/* ==================================================== */}
+        {activeTab === 'timeline' && (
+          <div className='space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-4'>
+              <div>
+                <h2 className='text-2xl font-black text-gray-900 flex items-center gap-2'>
+                  <Target className='w-6 h-6 text-[#FF2625]' />
+                  Weight Goal Timeline & Target Date Predictor
+                </h2>
+                <p className='text-xs text-gray-500 mt-1'>
+                  Calculates exact calendar completion date, total metabolic energy shift, and weekly fat loss velocity based on daily caloric deficit.
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() =>
+                  handleCopySummary(
+                    `Goal Timeline: ${goalTimelineResult.deltaDisplay}kg shift by ${goalTimelineResult.targetDateStr} (${goalTimelineResult.totalWeeks} weeks at ${goalDailyDeficit} kcal/day deficit)`
+                  )
+                }
+                className='text-xs font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer'
+              >
+                <Share2 className='w-3.5 h-3.5' /> {copied ? 'Copied!' : 'Copy Summary'}
+              </button>
+            </div>
+
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+              <div className='lg:col-span-5 space-y-4'>
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Current Weight</span>
+                    <span className='font-mono text-[#FF2625]'>{goalCurrentWeightKg} {unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='40'
+                    max='160'
+                    value={goalCurrentWeightKg}
+                    onChange={(e) => setGoalCurrentWeightKg(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                </div>
+
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Target Goal Weight</span>
+                    <span className='font-mono text-emerald-600 font-bold'>{goalTargetWeightKg} {unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='40'
+                    max='160'
+                    value={goalTargetWeightKg}
+                    onChange={(e) => setGoalTargetWeightKg(Number(e.target.value))}
+                    className='w-full accent-emerald-600 cursor-pointer'
+                  />
+                </div>
+
+                <div className='space-y-1'>
+                  <div className='flex justify-between text-xs font-bold text-gray-700'>
+                    <span>Planned Daily Caloric Deficit</span>
+                    <span className='font-mono text-[#FF2625] font-bold'>-{goalDailyDeficit} kcal/day</span>
+                  </div>
+                  <input
+                    type='range'
+                    min='200'
+                    max='1000'
+                    step='50'
+                    value={goalDailyDeficit}
+                    onChange={(e) => setGoalDailyDeficit(Number(e.target.value))}
+                    className='w-full accent-[#FF2625] cursor-pointer'
+                  />
+                  <div className='flex gap-1.5 pt-1 text-xs'>
+                    {[
+                      { l: 'Gentle (-350)', val: 350 },
+                      { l: 'Standard (-500)', val: 500 },
+                      { l: 'Aggressive (-750)', val: 750 },
+                      { l: 'Max (-1000)', val: 1000 },
+                    ].map((btn) => (
+                      <button
+                        key={btn.l}
+                        type='button'
+                        onClick={() => setGoalDailyDeficit(btn.val)}
+                        className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                          goalDailyDeficit === btn.val ? 'bg-[#FF2625] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {btn.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline Results Hero Card */}
+              <div className='lg:col-span-7 bg-linear-to-b from-gray-900 to-gray-950 rounded-xl p-6 text-white border border-gray-800 shadow-lg space-y-5'>
+                <div className='flex items-center justify-between'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400'>Projected Target Goal Day</span>
+                  <span className={`px-2.5 py-0.5 rounded-sm text-xs font-bold border ${goalTimelineResult.safeColor}`}>
+                    {goalTimelineResult.safeRating}
+                  </span>
+                </div>
+
+                <div className='text-center py-2'>
+                  <span className='text-3xl sm:text-4xl font-black font-mono tracking-tight text-white block'>
+                    {goalTimelineResult.targetDateStr}
+                  </span>
+                  <span className='inline-block mt-2 text-xs font-bold px-3 py-1 rounded-md bg-white/10 text-emerald-300'>
+                    ⏳ {goalTimelineResult.totalWeeks} Weeks ({goalTimelineResult.totalDays} Days) to reach {goalTargetWeightKg} {unitSystem === 'metric' ? 'kg' : 'lbs'}
+                  </span>
+                </div>
+
+                <div className='grid grid-cols-2 gap-3 text-xs'>
+                  <div className='p-3 bg-white/5 rounded-lg border border-white/10'>
+                    <span className='text-gray-400 font-medium block text-[11px]'>Total Caloric Shift Required</span>
+                    <strong className='text-base font-black text-amber-400 font-mono'>
+                      {goalTimelineResult.totalKcalNeeded.toLocaleString()} kcal
+                    </strong>
+                  </div>
+                  <div className='p-3 bg-white/5 rounded-lg border border-white/10'>
+                    <span className='text-gray-400 font-medium block text-[11px]'>Weekly Weight Loss Velocity</span>
+                    <strong className='text-base font-black text-sky-400 font-mono'>
+                      -{goalTimelineResult.weeklyKgRate} kg/wk <span className='text-[10px] text-gray-400 font-normal'>(-{goalTimelineResult.weeklyLbsRate} lbs)</span>
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Milestones Road Map */}
+                <div className='space-y-2 pt-1 border-t border-white/10'>
+                  <span className='text-xs font-bold uppercase tracking-wider text-gray-400 block'>
+                    Target Milestone Progressions
+                  </span>
+                  <div className='grid grid-cols-3 gap-2 text-center text-xs'>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-[10px] text-gray-400 uppercase block font-bold'>25% Milestone</span>
+                      <strong className='text-white block font-mono'>{goalTimelineResult.m25}</strong>
+                    </div>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-[10px] text-emerald-400 uppercase block font-bold'>50% Halfway</span>
+                      <strong className='text-white block font-mono'>{goalTimelineResult.m50}</strong>
+                    </div>
+                    <div className='p-2.5 bg-white/5 rounded border border-white/10'>
+                      <span className='text-[10px] text-amber-400 uppercase block font-bold'>75% Final Push</span>
+                      <strong className='text-white block font-mono'>{goalTimelineResult.m75}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================================================== */}
+        {/* TAB 7: BODY FAT % */}
         {/* ==================================================== */}
         {activeTab === 'bodyfat' && (
           <div className='space-y-6'>
@@ -2025,7 +2243,6 @@ const Calculators: React.FC = () => {
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
-              {/* Tape Measurements Input */}
               <div className='lg:col-span-6 space-y-4'>
                 <div className='grid grid-cols-2 gap-3'>
                   <div>
@@ -2148,7 +2365,6 @@ const Calculators: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Lean vs Fat Mass Visual Bar */}
                 <div className='space-y-2'>
                   <div className='flex justify-between text-xs font-bold'>
                     <span className='text-emerald-400'>💪 Lean Body Mass: {bfResult.leanMass} kg</span>
@@ -2178,7 +2394,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 7: BMR CALCULATOR (MULTI-FORMULA ENGINE) */}
+        {/* TAB 8: BMR ENGINE */}
         {/* ==================================================== */}
         {activeTab === 'bmr' && (
           <div className='space-y-6'>
@@ -2324,7 +2540,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 8: IDEAL WEIGHT */}
+        {/* TAB 9: IDEAL WEIGHT */}
         {/* ==================================================== */}
         {activeTab === 'idealweight' && (
           <div className='space-y-6'>
@@ -2437,7 +2653,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 9: 1RM (ONE REP MAX) & STRENGTH LOAD MATRIX */}
+        {/* TAB 10: 1RM (ONE REP MAX) & STRENGTH LOAD MATRIX */}
         {/* ==================================================== */}
         {activeTab === 'onerm' && (
           <div className='space-y-6'>
@@ -2465,7 +2681,6 @@ const Calculators: React.FC = () => {
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
-              {/* Lift Controls */}
               <div className='lg:col-span-5 space-y-5'>
                 <div>
                   <label className='block text-xs font-bold uppercase text-gray-500 mb-1.5'>Barbell Movement</label>
@@ -2524,7 +2739,6 @@ const Calculators: React.FC = () => {
                   />
                 </div>
 
-                {/* 1RM Hero Card */}
                 <div className='p-4 rounded-xl bg-linear-to-br from-gray-950 to-gray-900 text-white border border-gray-800 text-center space-y-1'>
                   <span className='text-[10px] uppercase font-bold tracking-widest text-red-400'>
                     Predicted Absolute 1RM
@@ -2575,7 +2789,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 10: DAILY HYDRATION */}
+        {/* TAB 11: DAILY HYDRATION */}
         {/* ==================================================== */}
         {activeTab === 'hydration' && (
           <div className='space-y-6'>
@@ -2674,7 +2888,6 @@ const Calculators: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Timing Schedule */}
                 <div className='space-y-2 pt-2 border-t border-white/10'>
                   <span className='text-xs font-bold uppercase tracking-wider text-gray-400 block'>
                     Optimal Hydration Timing Protocol
@@ -2697,7 +2910,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 11: CARDIO & PACE CALCULATOR */}
+        {/* TAB 12: CARDIO & PACE CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'pace' && (
           <div className='space-y-6'>
@@ -2849,7 +3062,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 12: PREGNANCY TRACKER */}
+        {/* TAB 13: PREGNANCY TRACKER */}
         {/* ==================================================== */}
         {activeTab === 'pregnancy' && (
           <div className='space-y-6'>
@@ -2950,7 +3163,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 13: CONCEPTION DATE CALCULATOR */}
+        {/* TAB 14: CONCEPTION DATE CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'conception' && (
           <div className='space-y-6'>
@@ -2993,7 +3206,7 @@ const Calculators: React.FC = () => {
         )}
 
         {/* ==================================================== */}
-        {/* TAB 14: DUE DATE (EDD) CALCULATOR */}
+        {/* TAB 15: DUE DATE (EDD) CALCULATOR */}
         {/* ==================================================== */}
         {activeTab === 'duedate' && (
           <div className='space-y-6'>
